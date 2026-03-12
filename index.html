@@ -439,6 +439,19 @@ footer strong{color:var(--red);}
           <input class="form-input" id="f-emoji" placeholder="Ex: 🍽️ 🏨 💊">
         </div>
       </div>
+
+      <!-- PHOTOS -->
+      <div style="margin-top:20px;">
+        <label class="form-label">📷 Photos de votre commerce</label>
+        <div id="photo-upload-area" style="border:2px dashed #2a2a2a;border-radius:14px;padding:20px;text-align:center;margin-top:8px;cursor:pointer;transition:border-color .2s;" onclick="document.getElementById('f-photos').click()" onmouseover="this.style.borderColor='#E8412A'" onmouseout="this.style.borderColor='#2a2a2a'">
+          <div style="font-size:2rem;margin-bottom:8px;">📸</div>
+          <div style="font-weight:600;font-size:.88rem;margin-bottom:4px;">Cliquez pour ajouter des photos</div>
+          <div id="photo-limit-txt" style="font-size:.72rem;color:#888;">Plan Gratuit : 1 photo maximum</div>
+        </div>
+        <input type="file" id="f-photos" accept="image/*" multiple style="display:none;" onchange="handlePhotos(this)">
+        <div id="photo-preview" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;"></div>
+      </div>
+
       <button class="form-submit" onclick="submitForm()">✅ Soumettre mon inscription</button>
     </div>
   </div>
@@ -705,6 +718,7 @@ function showDetail(id) {
 // ===== REGISTER =====
 function selectPlan(plan) {
   selectedPlan = plan;
+  updatePhotoLimit();
   document.getElementById('plan-basic').classList.toggle('selected', plan==='basic');
   document.getElementById('plan-premium').classList.toggle('selected', plan==='premium');
 }
@@ -868,6 +882,110 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Payment handled by showPaymentModal
+
+
+// ===== PHOTO UPLOAD CLOUDINARY =====
+var uploadedPhotos = [];
+var MAX_PHOTOS = 1;
+var CLOUD_NAME = 'dyzqzqzxw';
+var CLOUD_PRESET = 'madafind_upload';
+
+function updatePhotoLimit() {
+  MAX_PHOTOS = selectedPlan === 'premium' ? 5 : 1;
+  var txt = document.getElementById('photo-limit-txt');
+  if(txt) txt.textContent = selectedPlan === 'premium' ? '⭐ Plan Premium : 5 photos maximum' : 'Plan Gratuit : 1 photo maximum';
+  var area = document.getElementById('photo-upload-area');
+  if(area) area.style.borderColor = selectedPlan === 'premium' ? '#F5A623' : '#2a2a2a';
+}
+
+function handlePhotos(input) {
+  var files = Array.from(input.files);
+  if(files.length + uploadedPhotos.length > MAX_PHOTOS) {
+    showToast('⚠️ Maximum ' + MAX_PHOTOS + ' photo(s) pour ce plan');
+    input.value = '';
+    return;
+  }
+  Array.from(files).forEach(function(file) {
+    if(uploadedPhotos.length >= MAX_PHOTOS) return;
+    uploadToCloudinary(file);
+  });
+  input.value = '';
+}
+
+function uploadToCloudinary(file) {
+  var preview = document.getElementById('photo-preview');
+  var loadId = 'load' + Date.now();
+  var loadDiv = document.createElement('div');
+  loadDiv.id = loadId;
+  loadDiv.style.cssText = 'width:80px;height:80px;border-radius:10px;background:#1a1a1a;border:2px dashed #333;display:flex;align-items:center;justify-content:center;font-size:1.5rem;';
+  loadDiv.textContent = '⏳';
+  preview.appendChild(loadDiv);
+
+  var formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUD_PRESET);
+
+  fetch('https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', {
+    method: 'POST',
+    body: formData
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var old = document.getElementById(loadId);
+    if(old) old.remove();
+    if(data.secure_url) {
+      uploadedPhotos.push(data.secure_url);
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'position:relative;width:80px;height:80px;display:inline-block;';
+      var img = document.createElement('img');
+      img.src = data.secure_url;
+      img.style.cssText = 'width:80px;height:80px;border-radius:10px;object-fit:cover;display:block;';
+      var delbtn = document.createElement('button');
+      delbtn.textContent = 'x';
+      delbtn.style.cssText = 'position:absolute;top:-6px;right:-6px;background:#E8412A;border:none;color:white;width:20px;height:20px;border-radius:50%;cursor:pointer;font-size:.7rem;';
+      var savedUrl = data.secure_url;
+      delbtn.onclick = function() { removePhoto(delbtn, savedUrl); };
+      wrap.appendChild(img);
+      wrap.appendChild(delbtn);
+      preview.appendChild(wrap);
+      showToast('Photo ajoutee !');
+    } else {
+      showToast('Erreur upload - reessayez');
+    }
+  })
+  .catch(function() {
+    var old = document.getElementById(loadId);
+    if(old) old.remove();
+    showToast('Erreur connexion');
+  });
+}
+
+
+function removePhoto(btn, url) {
+  uploadedPhotos = uploadedPhotos.filter(function(u) { return u !== url; });
+  btn.parentElement.remove();
+  showToast('🗑️ Photo supprimée');
+}
+
+
+function renderPhotoPreviews() {
+  var preview = document.getElementById('photo-preview');
+  if(!preview) return;
+  preview.innerHTML = uploadedPhotos.map(function(src, i) {
+    return '<div style="position:relative;width:80px;height:80px;">' +
+      '<img src="' + src + '" style="width:80px;height:80px;object-fit:cover;border-radius:10px;border:2px solid #2a2a2a;">' +
+      '<button onclick="removePhoto(' + i + ')" style="position:absolute;top:-6px;right:-6px;background:#E8412A;border:none;color:white;width:20px;height:20px;border-radius:50%;cursor:pointer;font-size:.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;">✕</button>' +
+      '</div>';
+  }).join('');
+  // Update limit text
+  var txt = document.getElementById('photo-limit-txt');
+  if(txt) txt.textContent = uploadedPhotos.length + '/' + MAX_PHOTOS + ' photo(s) — ' + (selectedPlan === 'premium' ? '⭐ Premium' : 'Gratuit');
+}
+
+function removePhoto(i) {
+  uploadedPhotos.splice(i, 1);
+  renderPhotoPreviews();
+}
 
 </script>
 
