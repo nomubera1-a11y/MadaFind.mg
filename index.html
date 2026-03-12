@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
 <title>MadaFind — Annuaire Madagascar</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -40,7 +44,10 @@ nav{position:sticky;top:0;z-index:100;background:rgba(15,15,15,.95);backdrop-fil
 .lang-toggle:hover{color:var(--text);}
 
 /* ===== HOME PAGE ===== */
-.hero{padding:70px 24px 50px;text-align:center;position:relative;overflow:hidden;}
+.hero{padding:70px 24px 30px;text-align:center;position:relative;overflow:hidden;}
+.hero-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer;transition:all .3s;display:inline-block;}
+.hero-dot:hover{background:rgba(255,255,255,.7);}
+.dot-active{background:#fff !important;width:20px !important;border-radius:4px !important;}
 .hero::before{content:'';position:absolute;inset:0;background:linear-gradient(to bottom, rgba(0,0,0,.65) 0%, rgba(0,0,0,.55) 100%);pointer-events:none;z-index:0;}
 .hero>*{position:relative;z-index:1;}
 .hero-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(232,65,42,.12);border:1px solid rgba(232,65,42,.25);color:#ff7a6a;font-size:.68rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:5px 14px;border-radius:20px;margin-bottom:20px;}
@@ -55,7 +62,8 @@ nav{position:sticky;top:0;z-index:100;background:rgba(15,15,15,.95);backdrop-fil
 .search-btn{background:var(--red);color:white;border:none;padding:10px 22px;border-radius:10px;font-size:.82rem;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;transition:opacity .2s;}
 .search-btn:hover{opacity:.85;}
 .search-tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:0;}
-.stag{background:var(--card);border:1px solid var(--border);color:var(--muted);font-size:.7rem;padding:5px 12px;border-radius:20px;cursor:pointer;transition:all .2s;}
+.stag{background:var(--card);border:1px solid var(--border);color:var(--muted);font-size:.7rem;padding:5px 12px;border-radius:20px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;}
+.stag-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .stag:hover{border-color:var(--red);color:var(--red);}
 
 .stats-bar{background:var(--dark2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:18px 24px;}
@@ -74,8 +82,12 @@ nav{position:sticky;top:0;z-index:100;background:rgba(15,15,15,.95);backdrop-fil
 .cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-bottom:40px;}
 .cat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 10px;text-align:center;cursor:pointer;transition:all .2s;}
 .cat-card:hover{transform:translateY(-3px);border-color:var(--red);}
-.cat-icon{font-size:1.6rem;margin-bottom:6px;}
-.cat-name{font-size:.7rem;font-weight:600;}
+.cat-card{overflow:hidden;padding:0 !important;border-radius:14px !important;}
+.cat-img-wrap{height:80px;background-size:cover;background-position:center;position:relative;display:flex;align-items:center;justify-content:center;}
+.cat-img-overlay{position:absolute;inset:0;background:rgba(0,0,0,.45);}
+.cat-svg-icon{position:relative;z-index:1;width:32px;height:32px;color:#fff;flex-shrink:0;}
+.cat-body{padding:10px 12px;}
+.cat-name{font-size:.72rem;font-weight:700;}
 .cat-count{font-size:.6rem;color:var(--muted);margin-top:2px;}
 
 .listings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
@@ -106,7 +118,24 @@ nav{position:sticky;top:0;z-index:100;background:rgba(15,15,15,.95);backdrop-fil
 .pb-btn:hover{opacity:.85;}
 
 /* ===== LISTING PAGE ===== */
-.listing-page-header{background:var(--dark2);border-bottom:1px solid var(--border);padding:24px;}
+.listing-page-header{background:var(--dark2);border-bottom:1px solid var(--border);padding:16px 24px 0;}
+.listing-filters{max-width:1200px;margin:0 auto;display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding-bottom:14px;}
+/* City pills */
+.city-pills{max-width:1200px;margin:0 auto;display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:16px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+.city-pills::-webkit-scrollbar{display:none;}
+.city-pill{background:transparent;border:1px solid var(--border);color:var(--muted);padding:7px 16px;border-radius:100px;font-family:'Sora',sans-serif;font-size:.75rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .2s;letter-spacing:.3px;}
+.city-pill:hover{border-color:var(--red);color:var(--text);}
+.city-pill.active{background:var(--red);border-color:var(--red);color:#fff;}
+/* Map on detail page */
+#detail-map{width:100%;height:280px;border-radius:14px;overflow:hidden;margin-top:14px;border:1px solid var(--border);}
+.route-mode-btn{background:var(--dark2);border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:100px;font-family:Sora,sans-serif;font-size:.72rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.route-mode-btn:hover{border-color:var(--red);color:var(--text);}
+.active-mode{background:var(--red) !important;border-color:var(--red) !important;color:#fff !important;}
+.route-step{display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:.72rem;color:var(--muted);}
+.route-step:last-child{border-bottom:none;}
+.step-icon{width:20px;height:20px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;color:#fff;flex-shrink:0;margin-top:1px;}
+.map-placeholder{width:100%;height:220px;border-radius:14px;background:var(--dark2);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;margin-top:14px;color:var(--muted);font-size:.8rem;}
+.map-link-btn{display:inline-flex;align-items:center;gap:8px;background:var(--red);color:#fff;border:none;padding:10px 20px;border-radius:10px;font-family:'Sora',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;margin-top:10px;text-decoration:none;}
 .listing-filters{max-width:1200px;margin:0 auto;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
 .filter-input{background:var(--card);border:1px solid var(--border);color:var(--text);padding:9px 16px;border-radius:10px;font-family:'Sora',sans-serif;font-size:.8rem;outline:none;transition:border-color .2s;flex:1;min-width:200px;}
 .filter-input:focus{border-color:var(--red);}
@@ -114,7 +143,8 @@ nav{position:sticky;top:0;z-index:100;background:rgba(15,15,15,.95);backdrop-fil
 .results-count{color:var(--muted);font-size:.78rem;padding:12px 0;}
 
 /* ===== DETAIL PAGE ===== */
-.detail-hero{background:var(--dark2);border-bottom:1px solid var(--border);padding:32px 24px;}
+.detail-hero{background:var(--dark2);border-bottom:1px solid var(--border);padding:32px 24px;position:relative;overflow:hidden;}
+.detail-hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.18;filter:blur(2px);transform:scale(1.05);}
 .detail-inner{max-width:1000px;margin:0 auto;display:flex;gap:28px;align-items:flex-start;}
 .detail-icon{width:100px;height:100px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:3rem;flex-shrink:0;}
 .detail-info{flex:1;}
@@ -275,7 +305,7 @@ footer strong{color:var(--red);}
 
 <!-- ===== HOME PAGE ===== -->
 <div class="page active" id="page-home">
-  <div class="hero" style="background-image:url(https://picsum.photos/seed/madagascar/1400/600);background-size:cover;background-position:center;position:relative;">
+  <div class="hero" id="hero-bg" style="background-size:cover;background-position:center;position:relative;transition:background-image 1.2s ease;">
     <div class="hero-tag">🇲🇬 N°1 Madagascar</div>
     <h1 id="hero-title">Trouvez tout à<br><em>Madagascar</em></h1>
     <p id="hero-sub">Restaurants, hôtels, commerces, services... Les meilleures adresses de la Grande Île.</p>
@@ -285,13 +315,33 @@ footer strong{color:var(--red);}
       <button class="search-btn" onclick="doSearch()">Chercher</button>
     </div>
     <div class="search-tags">
-      <div class="stag" onclick="filterAndGo('Restaurants')">🍽️ Restaurants</div>
-      <div class="stag" onclick="filterAndGo('Hôtels')">🏨 Hôtels</div>
-      <div class="stag" onclick="filterAndGo('Pharmacies')">💊 Pharmacies</div>
-      <div class="stag" onclick="filterAndGo('Taxis')">🚕 Taxis</div>
-      <div class="stag" onclick="filterAndGo('Supermarchés')">🛒 Supermarchés</div>
-      <div class="stag" onclick="filterAndGo('Banques')">🏦 Banques</div>
+      <div class="stag" onclick="filterAndGo('Restaurants')"><span class="stag-dot" style="background:#e67e22"></span>Restaurants</div>
+      <div class="stag" onclick="filterAndGo('Hôtels')"><span class="stag-dot" style="background:#8e44ad"></span>Hôtels</div>
+      <div class="stag" onclick="filterAndGo('Pharmacies')"><span class="stag-dot" style="background:#E8412A"></span>Pharmacies</div>
+      <div class="stag" onclick="filterAndGo('Taxis')"><span class="stag-dot" style="background:#f39c12"></span>Taxis</div>
+      <div class="stag" onclick="filterAndGo('Supermarchés')"><span class="stag-dot" style="background:#27ae60"></span>Supermarchés</div>
+      <div class="stag" onclick="filterAndGo('Banques')"><span class="stag-dot" style="background:#2980b9"></span>Banques</div>
     </div>
+  </div>
+
+  <!-- Hero caption + dots -->
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px 0 6px;position:relative;z-index:1;">
+    <div id="hero-caption" style="font-size:.72rem;color:rgba(255,255,255,.75);letter-spacing:.5px;transition:opacity .4s;text-shadow:0 1px 4px rgba(0,0,0,.8);"></div>
+    <div style="display:flex;gap:6px;">
+      <span class="hero-dot dot-active" data-i="0"></span>
+      <span class="hero-dot" data-i="1"></span>
+      <span class="hero-dot" data-i="2"></span>
+      <span class="hero-dot" data-i="3"></span>
+      <span class="hero-dot" data-i="4"></span>
+      <span class="hero-dot" data-i="5"></span>
+      <span class="hero-dot" data-i="6"></span>
+      <span class="hero-dot" data-i="7"></span>
+      <span class="hero-dot" data-i="8"></span>
+      <span class="hero-dot" data-i="9"></span>
+      <span class="hero-dot" data-i="10"></span>
+      <span class="hero-dot" data-i="11"></span>
+    </div>
+  </div>
   </div>
 
   <div class="stats-bar">
@@ -339,10 +389,21 @@ footer strong{color:var(--red);}
       <select class="filter-select" id="filter-cat" onchange="renderListings()">
         <option value="">Toutes catégories</option>
       </select>
-      <select class="filter-select" id="filter-city" onchange="renderListings()">
-        <option value="">Toutes villes</option>
-      </select>
     </div>
+    <!-- City pill buttons -->
+    <div class="city-pills" id="city-pills">
+      <button class="city-pill active" onclick="setCity('')" id="pill-all">🇲🇬 Tout Madagascar</button>
+      <button class="city-pill" onclick="setCity('Antananarivo')" id="pill-Antananarivo">📍 Antananarivo</button>
+      <button class="city-pill" onclick="setCity('Toamasina')" id="pill-Toamasina">📍 Toamasina</button>
+      <button class="city-pill" onclick="setCity('Antsirabe')" id="pill-Antsirabe">📍 Antsirabe</button>
+      <button class="city-pill" onclick="setCity('Mahajanga')" id="pill-Mahajanga">📍 Mahajanga</button>
+      <button class="city-pill" onclick="setCity('Fianarantsoa')" id="pill-Fianarantsoa">📍 Fianarantsoa</button>
+      <button class="city-pill" onclick="setCity('Antsiranana')" id="pill-Antsiranana">📍 Diego-Suarez</button>
+      <button class="city-pill" onclick="setCity('Toliara')" id="pill-Toliara">📍 Toliara</button>
+      <button class="city-pill" onclick="setCity('Nosy Be')" id="pill-Nosy Be">📍 Nosy Be</button>
+    </div>
+    <!-- Hidden city select for JS compatibility -->
+    <select id="filter-city" style="display:none"></select>
   </div>
   <div class="section">
     <div class="results-count" id="results-count"></div>
@@ -354,7 +415,8 @@ footer strong{color:var(--red);}
 <!-- ===== DETAIL PAGE ===== -->
 <div class="page" id="page-detail">
   <div class="back-btn" onclick="showPage('listings')">← Retour aux résultats</div>
-  <div class="detail-hero">
+  <div class="detail-hero" id="detail-hero">
+    <div class="detail-hero-bg" id="detail-hero-bg"></div>
     <div class="detail-inner" id="detail-hero-content"></div>
   </div>
   <div class="detail-content" id="detail-body"></div>
@@ -508,19 +570,35 @@ footer strong{color:var(--red);}
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ===== DATA =====
 const CATS = [
-  {name:'Restaurants',icon:'🍽️',count:0},
-  {name:'Hôtels',icon:'🏨',count:0},
-  {name:'Supermarchés',icon:'🛒',count:0},
-  {name:'Pharmacies',icon:'💊',count:0},
-  {name:'Banques',icon:'🏦',count:0},
-  {name:'Taxis',icon:'🚕',count:0},
-  {name:'Beauté & Spa',icon:'💅',count:0},
-  {name:'Santé',icon:'🏥',count:0},
-  {name:'Éducation',icon:'📚',count:0},
-  {name:'Immobilier',icon:'🏠',count:0},
-  {name:'Garage & Auto',icon:'🔧',count:0},
-  {name:'Autre',icon:'🏪',count:0},
+  {name:'Restaurants', icon:'restaurant', img:'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=200&fit=crop', color:'#e67e22', count:0},
+  {name:'Hôtels',      icon:'hotel',      img:'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=400&h=200&fit=crop', color:'#8e44ad', count:0},
+  {name:'Supermarchés',icon:'market',     img:'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&h=200&fit=crop', color:'#27ae60', count:0},
+  {name:'Pharmacies',  icon:'pharmacy',   img:'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&h=200&fit=crop', color:'#E8412A', count:0},
+  {name:'Banques',     icon:'bank',       img:'https://images.unsplash.com/photo-1501167786227-4cba60f6d58f?w=400&h=200&fit=crop', color:'#2980b9', count:0},
+  {name:'Taxis',       icon:'taxi',       img:'https://images.unsplash.com/photo-1597239450996-ea7c2c564412?w=400&h=200&fit=crop', color:'#f39c12', count:0},
+  {name:'Beauté & Spa',icon:'beauty',     img:'https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=400&h=200&fit=crop', color:'#e91e63', count:0},
+  {name:'Santé',       icon:'health',     img:'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=400&h=200&fit=crop', color:'#16a085', count:0},
+  {name:'Éducation',   icon:'education',  img:'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=400&h=200&fit=crop', color:'#2c3e50', count:0},
+  {name:'Immobilier',  icon:'realestate', img:'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=200&fit=crop', color:'#795548', count:0},
+  {name:'Garage & Auto',icon:'garage',   img:'https://images.unsplash.com/photo-1487754180451-c456f719a1fc?w=400&h=200&fit=crop', color:'#37474f', count:0},
+  {name:'Autre',       icon:'other',      img:'https://images.unsplash.com/photo-1590928240229-c505fe88faff?w=400&h=200&fit=crop', color:'#607d8b', count:0},
 ];
+
+// SVG icons per category key
+const CAT_SVG = {
+  restaurant: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>',
+  hotel:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14"/><path d="M2 22h20"/><path d="M9 22V12h6v10"/><rect x="9" y="6" width="6" height="4" rx="1"/></svg>',
+  market:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>',
+  pharmacy:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/><rect x="5" y="5" width="14" height="14" rx="2"/></svg>',
+  bank:        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22h18M6 18V9m4 9V9m4 9V9m4 9V9M3 9l9-7 9 7"/></svg>',
+  taxi:        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H19a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2"/><circle cx="8" cy="17" r="2"/><circle cx="16" cy="17" r="2"/><path d="M9 11h6"/></svg>',
+  beauty:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 18V8"/><path d="M8 12s1-2 4-2 4 2 4 2"/></svg>',
+  health:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>',
+  education:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
+  realestate:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+  garage:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><path d="M4 10L6 4h12l2 6"/><path d="M2 10h20v8H2z"/></svg>',
+  other:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+};
 
 // Données initiales
 let businesses = [
@@ -612,7 +690,8 @@ let businesses = [
     "emoji": "💊",
     "status": "active",
     "plan": "basic",
-    "badge": "verified"
+    "badge": "verified",
+    "photo": "https://groupe-metropole.mg/wp-content/uploads/2017/09/7219-600x400.jpg"
   },
   {
     "rating": 4.5,
@@ -648,7 +727,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "premium",
-    "badge": "verified"
+    "badge": "verified",
+    "photo": "https://www.bni.mg/wp-content/uploads/2021/03/logo-bni.png"
   },
   {
     "rating": 4.7,
@@ -720,7 +800,8 @@ let businesses = [
     "emoji": "💊",
     "status": "active",
     "plan": "basic",
-    "badge": "verified"
+    "badge": "verified",
+    "photo": "https://pharmacie-hasimbola.mg/wp-content/uploads/2020/07/Officine-1200x800.jpg"
   },
   {
     "rating": 4.2,
@@ -810,7 +891,8 @@ let businesses = [
     "emoji": "💊",
     "status": "active",
     "plan": "basic",
-    "badge": "verified"
+    "badge": "verified",
+    "photo": "https://groupe-metropole.mg/wp-content/uploads/2017/09/7149-670x400.jpg"
   },
   {
     "rating": 4.3,
@@ -828,7 +910,8 @@ let businesses = [
     "emoji": "💊",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://groupe-metropole.mg/wp-content/uploads/2017/09/7682.jpg"
   },
   {
     "rating": 4.2,
@@ -846,7 +929,8 @@ let businesses = [
     "emoji": "💊",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://groupe-metropole.mg/wp-content/uploads/2022/10/Pharmacie-kanacia-site-1-533x400.jpg"
   },
   {
     "rating": 4.5,
@@ -864,7 +948,8 @@ let businesses = [
     "emoji": "💊",
     "status": "active",
     "plan": "basic",
-    "badge": "verified"
+    "badge": "verified",
+    "photo": "https://groupe-metropole.mg/wp-content/uploads/2021/10/horaires-644x400.jpg"
   },
   {
     "rating": 4.0,
@@ -1134,7 +1219,8 @@ let businesses = [
     "emoji": "💊",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://groupe-metropole.mg/wp-content/uploads/2022/10/bazar-Be-site-543x400.png"
   },
   {
     "rating": 4.1,
@@ -1404,7 +1490,8 @@ let businesses = [
     "emoji": "🚑",
     "status": "active",
     "plan": "basic",
-    "badge": "verified"
+    "badge": "verified",
+    "photo": "https://espacemedical.mg/wp-content/uploads/2022/01/Espace-Medical-Ambodivona.jpg"
   },
   {
     "rating": 4.5,
@@ -1422,7 +1509,8 @@ let businesses = [
     "emoji": "🚑",
     "status": "active",
     "plan": "basic",
-    "badge": "verified"
+    "badge": "verified",
+    "photo": "https://espacemedical.mg/wp-content/uploads/2022/01/Espace-Medical-Ankadivato.jpg"
   },
   {
     "rating": 4.3,
@@ -1494,7 +1582,8 @@ let businesses = [
     "emoji": "🔬",
     "status": "active",
     "plan": "basic",
-    "badge": "verified"
+    "badge": "verified",
+    "photo": "https://www.pasteur.mg/wp-content/uploads/2019/06/IPM-exterieur.jpg"
   },
   {
     "rating": 4.1,
@@ -1584,7 +1673,8 @@ let businesses = [
     "emoji": "🚑",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://espacemedical.mg/wp-content/uploads/2022/01/Espace-Medical-Mahajanga.jpg"
   },
   {
     "rating": 4.3,
@@ -1602,7 +1692,8 @@ let businesses = [
     "emoji": "🚑",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://espacemedical.mg/wp-content/uploads/2022/01/Espace-Medical-Diego.jpg"
   },
   {
     "rating": 4.2,
@@ -1620,7 +1711,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": "verified"
+    "badge": "verified",
+    "photo": "https://boa.mg/wp-content/themes/boa/images/logo-boa.png"
   },
   {
     "rating": 4.1,
@@ -1638,7 +1730,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://boa.mg/wp-content/themes/boa/images/logo-boa.png"
   },
   {
     "rating": 4.0,
@@ -1656,7 +1749,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://boa.mg/wp-content/themes/boa/images/logo-boa.png"
   },
   {
     "rating": 4.2,
@@ -1674,7 +1768,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://boa.mg/wp-content/themes/boa/images/logo-boa.png"
   },
   {
     "rating": 4.0,
@@ -1692,7 +1787,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://boa.mg/wp-content/themes/boa/images/logo-boa.png"
   },
   {
     "rating": 4.0,
@@ -1710,7 +1806,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://boa.mg/wp-content/themes/boa/images/logo-boa.png"
   },
   {
     "rating": 4.1,
@@ -1728,7 +1825,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://boa.mg/wp-content/themes/boa/images/logo-boa.png"
   },
   {
     "rating": 4.1,
@@ -1746,7 +1844,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://boa.mg/wp-content/themes/boa/images/logo-boa.png"
   },
   {
     "rating": 4.0,
@@ -1764,7 +1863,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://boa.mg/wp-content/themes/boa/images/logo-boa.png"
   },
   {
     "rating": 4.0,
@@ -1782,7 +1882,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://boa.mg/wp-content/themes/boa/images/logo-boa.png"
   },
   {
     "rating": 4.0,
@@ -1800,7 +1901,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://boa.mg/wp-content/themes/boa/images/logo-boa.png"
   },
   {
     "rating": 3.9,
@@ -1818,7 +1920,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://boa.mg/wp-content/themes/boa/images/logo-boa.png"
   },
   {
     "rating": 3.9,
@@ -1836,7 +1939,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://boa.mg/wp-content/themes/boa/images/logo-boa.png"
   },
   {
     "rating": 4.5,
@@ -1854,7 +1958,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": "verified"
+    "badge": "verified",
+    "photo": "https://www.bmoinet.net/wp-content/uploads/2022/03/logo-bmoi.png"
   },
   {
     "rating": 4.6,
@@ -1872,7 +1977,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": "verified"
+    "badge": "verified",
+    "photo": "https://www.bmoinet.net/wp-content/uploads/2022/03/logo-bmoi.png"
   },
   {
     "rating": 4.3,
@@ -1890,7 +1996,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://www.bmoinet.net/wp-content/uploads/2022/03/logo-bmoi.png"
   },
   {
     "rating": 4.2,
@@ -1908,7 +2015,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://www.bmoinet.net/wp-content/uploads/2022/03/logo-bmoi.png"
   },
   {
     "rating": 4.2,
@@ -1926,7 +2034,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": "verified"
+    "badge": "verified",
+    "photo": "https://www.bni.mg/wp-content/uploads/2021/03/logo-bni.png"
   },
   {
     "rating": 4.0,
@@ -1944,7 +2053,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://www.bni.mg/wp-content/uploads/2021/03/logo-bni.png"
   },
   {
     "rating": 3.9,
@@ -1962,7 +2072,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://www.bni.mg/wp-content/uploads/2021/03/logo-bni.png"
   },
   {
     "rating": 4.1,
@@ -1980,7 +2091,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": "verified"
+    "badge": "verified",
+    "photo": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Soci%C3%A9t%C3%A9_G%C3%A9n%C3%A9rale.svg/400px-Soci%C3%A9t%C3%A9_G%C3%A9n%C3%A9rale.svg.png"
   },
   {
     "rating": 4.2,
@@ -1998,7 +2110,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": "verified"
+    "badge": "verified",
+    "photo": "https://mcbmadagascar.com/wp-content/uploads/2022/06/logo-mcb-madagascar.png"
   },
   {
     "rating": 4.0,
@@ -2016,7 +2129,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://sbmgroup.mu/wp-content/uploads/2021/08/SBM-Logo.png"
   },
   {
     "rating": 4.1,
@@ -2034,7 +2148,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://www.acces-banque-madagascar.com/wp-content/uploads/2021/09/logo-abm.png"
   },
   {
     "rating": 4.1,
@@ -2052,7 +2167,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://madagascar.bgfi.com/wp-content/uploads/sites/12/2019/11/logo-bgfi-madagascar.png"
   },
   {
     "rating": 4.0,
@@ -2070,7 +2186,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://baobab-microfinance.com/wp-content/uploads/2020/05/logo-baobab.png"
   },
   {
     "rating": 3.9,
@@ -2088,7 +2205,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": ""
+    "badge": "",
+    "photo": "https://upload.wikimedia.org/wikipedia/fr/thumb/5/5e/CEM_Madagascar_logo.png/320px-CEM_Madagascar_logo.png"
   },
   {
     "rating": 4.4,
@@ -2106,7 +2224,8 @@ let businesses = [
     "emoji": "🏦",
     "status": "active",
     "plan": "basic",
-    "badge": "verified"
+    "badge": "verified",
+    "photo": "https://www.bmoinet.net/wp-content/uploads/2022/03/logo-bmoi.png"
   }
 ];
 
@@ -2146,9 +2265,14 @@ function renderHome() {
   catGrid.innerHTML = CATS.map(c => {
     const count = businesses.filter(b=>b.cat===c.name && b.status==='active').length;
     return `<div class="cat-card" onclick="filterAndGo('${c.name}')">
-      <div class="cat-icon">${c.icon}</div>
-      <div class="cat-name">${c.name}</div>
-      <div class="cat-count">${count} adresse${count>1?'s':''}</div>
+      <div class="cat-img-wrap" style="background-image:url(${c.img})">
+        <div class="cat-img-overlay"></div>
+        <div class="cat-svg-icon">${CAT_SVG[c.icon]||''}</div>
+      </div>
+      <div class="cat-body">
+        <div class="cat-name">${c.name}</div>
+        <div class="cat-count">${count} adresse${count>1?'s':''}</div>
+      </div>
     </div>`;
   }).join('');
 
@@ -2158,27 +2282,62 @@ function renderHome() {
 }
 
 const PHOTOS = {
-    'Restaurants': 'https://picsum.photos/seed/restaurant/400/200',
-    'Hôtels': 'https://picsum.photos/seed/hotel/400/200',
-    'Pharmacies': 'https://picsum.photos/seed/pharmacy/400/200',
-    'Supermarchés': 'https://picsum.photos/seed/market/400/200',
-    'Banques': 'https://picsum.photos/seed/bank/400/200',
-    'Taxis': 'https://picsum.photos/seed/taxi/400/200',
-    'Beauté & Spa': 'https://picsum.photos/seed/beauty/400/200',
-    'Santé': 'https://picsum.photos/seed/health/400/200',
-    'Éducation': 'https://picsum.photos/seed/school/400/200',
-    'Immobilier': 'https://picsum.photos/seed/house/400/200',
-    'Garage & Auto': 'https://picsum.photos/seed/garage/400/200',
-    'Autre': 'https://picsum.photos/seed/store/400/200',
+  // Photos réelles et fiables — thème Madagascar
+  // Restaurants : cuisine malgache, marché
+  'Restaurants': 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=500&h=250&fit=crop&q=80',
+  // Hôtels : lodge tropical, bungalow
+  'Hôtels': 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=500&h=250&fit=crop&q=80',
+  // Pharmacies : médicaments, santé
+  'Pharmacies': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500&h=250&fit=crop&q=80',
+  // Supermarchés : marché fruits légumes
+  'Supermarchés': 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&h=250&fit=crop&q=80',
+  // Banques : bâtiment financier
+  'Banques': 'https://images.unsplash.com/photo-1501167786227-4cba60f6d58f?w=500&h=250&fit=crop&q=80',
+  // Taxis : rue animée africaine
+  'Taxis': 'https://images.unsplash.com/photo-1597239450996-ea7c2c564412?w=500&h=250&fit=crop&q=80',
+  // Beauté & Spa : salon, beauté
+  'Beauté & Spa': 'https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=500&h=250&fit=crop&q=80',
+  // Santé : hôpital, soins
+  'Santé': 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=500&h=250&fit=crop&q=80',
+  // Éducation : université, école
+  'Éducation': 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=500&h=250&fit=crop&q=80',
+  // Immobilier : maison tropicale
+  'Immobilier': 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=500&h=250&fit=crop&q=80',
+  // Garage & Auto : garage, voiture
+  'Garage & Auto': 'https://images.unsplash.com/photo-1487754180451-c456f719a1fc?w=500&h=250&fit=crop&q=80',
+  // Autre : vue Antananarivo / Madagascar
+  'Autre': 'https://images.unsplash.com/photo-1590928240229-c505fe88faff?w=500&h=250&fit=crop&q=80',
 };
 
+// Photos par ville pour le hero de la carte détail
+const CITY_PHOTOS = {
+  'Antananarivo': 'https://images.unsplash.com/photo-1590928240229-c505fe88faff?w=800&h=300&fit=crop&q=80',
+  'Toamasina':    'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&h=300&fit=crop&q=80',
+  'Nosy Be':      'https://images.unsplash.com/photo-1566438480900-0609be27a4be?w=800&h=300&fit=crop&q=80',
+  'Mahajanga':    'https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?w=800&h=300&fit=crop&q=80',
+  'Fianarantsoa': 'https://images.unsplash.com/photo-1528702748617-c64d49f918af?w=800&h=300&fit=crop&q=80',
+  'Antsirabe':    'https://images.unsplash.com/photo-1509233725247-49e657c54213?w=800&h=300&fit=crop&q=80',
+  'Antsiranana':  'https://images.unsplash.com/photo-1520454974749-a436db0ccc1e?w=800&h=300&fit=crop&q=80',
+  'Toliara':      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=300&fit=crop&q=80',
+};
+
+function getPhoto(cat) {
+  return PHOTOS[cat] || PHOTOS['Autre'];
+}
+
+function getCityPhoto(city) {
+  return CITY_PHOTOS[city] || CITY_PHOTOS['Antananarivo'];
+}
+
 function cardHTML(b) {
-  const photo = b.photo || PHOTOS[b.cat] || PHOTOS['Autre'];
+  const photo = b.photo || getPhoto(b.cat);
+  const fallbackPhoto = getPhoto(b.cat);
   const badgeHTML = b.badge==='premium' ? '<div class="badge badge-premium">⭐ Premium</div>' :
                     b.badge==='new' ? '<div class="badge badge-new">Nouveau</div>' :
                     b.badge==='verified' ? '<div class="badge badge-verified">✓ Vérifié</div>' : '';
   return `<div class="listing-card" onclick="showDetail(${b.id})">
-    <div class="listing-img" style="background-image:url(${photo});background-size:cover;background-position:center;position:relative;">
+    <div class="listing-img" style="background-image:url(${photo});background-size:cover;background-position:center;position:relative;" id="card-img-${b.id}">
+      <img src="${photo}" style="display:none" onerror="(function(el){var p=el.closest('.listing-img');if(p)p.style.backgroundImage='url(${fallbackPhoto})';})(this)"/>
       <div style="position:absolute;inset:0;background:rgba(0,0,0,.25);border-radius:0"></div>
       ${badgeHTML}
     </div>
@@ -2207,7 +2366,7 @@ function populateFilters() {
 function renderListings() {
   const q = (document.getElementById('filter-search')?.value||'').toLowerCase();
   const cat = document.getElementById('filter-cat')?.value||'';
-  const city = document.getElementById('filter-city')?.value||'';
+  const city = currentCity || (document.getElementById('filter-city')?.value||'');
   let results = businesses.filter(b=>b.status==='active');
   if(q) results = results.filter(b=>b.name.toLowerCase().includes(q)||b.desc.toLowerCase().includes(q)||b.cat.toLowerCase().includes(q));
   if(cat) results = results.filter(b=>b.cat===cat);
@@ -2223,6 +2382,20 @@ function filterAndGo(cat) {
     document.getElementById('filter-cat').value = cat;
     renderListings();
   }, 100);
+}
+
+// City filter with pills
+let currentCity = '';
+function setCity(city) {
+  currentCity = city;
+  // Update pills active state
+  document.querySelectorAll('.city-pill').forEach(p => p.classList.remove('active'));
+  const active = city ? document.getElementById('pill-' + city) : document.getElementById('pill-all');
+  if(active) active.classList.add('active');
+  // Update hidden select
+  const sel = document.getElementById('filter-city');
+  if(sel) sel.value = city;
+  renderListings();
 }
 
 function doSearch() {
@@ -2242,7 +2415,7 @@ function showDetail(id) {
   const c = '1a1a1a,2d2d2d';
 
   document.getElementById('detail-hero-content').innerHTML = `
-    <div class="detail-icon" style="background:linear-gradient(135deg,#${c})">${b.emoji||'🏪'}</div>
+    <div class="detail-icon" style="background:linear-gradient(135deg,#${c});display:flex;align-items:center;justify-content:center;font-size:0;color:white">${(()=>{const cat=CATS.find(x=>x.name===b.cat);if(!cat||!CAT_SVG[cat.icon])return b.emoji||'🏪';return CAT_SVG[cat.icon].replace('<svg ','<svg width="36" height="36" ');})()}</div>
     <div class="detail-info">
       <div class="detail-cat">${b.cat}</div>
       <div class="detail-name">${b.name}</div>
@@ -2284,9 +2457,243 @@ function showDetail(id) {
         <h3>Partager</h3>
         <button class="contact-btn" style="background:var(--dark2);border:1px solid var(--border)" onclick="showToast('🔗 Lien copié !')">🔗 Copier le lien</button>
       </div>
+    </div>
+    <div class="detail-section" style="margin:0 16px 24px;">
+      <h3>📍 Localisation & Itinéraire</h3>
+      <div id="detail-map"></div>
+      <div id="map-address-bar" style="margin-top:10px;background:var(--dark2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:1.2rem">📍</span>
+        <div style="flex:1">
+          <div id="map-addr-name" style="font-size:.82rem;font-weight:700;color:var(--text)"></div>
+          <div id="map-addr-city" style="font-size:.75rem;color:var(--muted)"></div>
+        </div>
+      </div>
+      <div id="route-panel" style="margin-top:10px;">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+          <input id="user-location-input" placeholder="📌 Votre position (ex: Analakely, Tana)" style="flex:1;background:var(--dark2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:10px;font-family:Sora,sans-serif;font-size:.78rem;outline:none;" oninput="clearRoute()"/>
+          <button onclick="getRouteFromInput()" style="background:#E8412A;color:#fff;border:none;padding:10px 16px;border-radius:10px;font-family:Sora,sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;">🗺️ Trajet</button>
+          <button onclick="useMyGPS()" title="Ma position GPS" style="background:var(--dark2);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:10px;font-size:1rem;cursor:pointer;">📡</button>
+        </div>
+        <div id="route-info" style="display:none;background:var(--dark2);border:1px solid #E8412A33;border-radius:10px;padding:12px 14px;font-size:.78rem;">
+          <div style="display:flex;gap:16px;flex-wrap:wrap;">
+            <div><span style="color:var(--muted)">Distance</span><br><b id="route-dist" style="color:#E8412A;font-size:1rem"></b></div>
+            <div><span style="color:var(--muted)">Durée estimée</span><br><b id="route-time" style="color:var(--text);font-size:1rem"></b></div>
+            <div><span style="color:var(--muted)">Mode</span><br><b id="route-mode" style="color:var(--text);font-size:1rem">🚗 Voiture</b></div>
+          </div>
+          <div id="route-steps" style="margin-top:10px;display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto;"></div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:8px;" id="route-mode-btns">
+          <button onclick="setRouteMode('driving')" id="mode-driving" class="route-mode-btn active-mode">🚗 Voiture</button>
+          <button onclick="setRouteMode('walking')" id="mode-walking" class="route-mode-btn">🚶 Pied</button>
+          <button onclick="setRouteMode('cycling')" id="mode-cycling" class="route-mode-btn">🚲 Vélo</button>
+        </div>
+      </div>
     </div>`;
 
   showPage('detail');
+  // City background in hero
+  const heroBg = document.getElementById('detail-hero-bg');
+  if(heroBg) heroBg.style.backgroundImage = `url(${getCityPhoto(b.city)})`;
+  setTimeout(()=>renderMap(b), 200);
+}
+
+
+// ===== MAP & ROUTING =====
+let leafletMap = null;
+let routingControl = null;
+let destMarker = null;
+let destCoords = null;
+let currentRouteMode = 'driving';
+
+const CITY_COORDS = {
+  'Antananarivo': [-18.9137, 47.5361],
+  'Toamasina':    [-18.1492, 49.4023],
+  'Antsirabe':    [-19.8686, 47.0289],
+  'Mahajanga':    [-15.7164, 46.3170],
+  'Fianarantsoa': [-21.4527, 47.0855],
+  'Antsiranana':  [-12.3522, 49.3010],
+  'Toliara':      [-23.3568, 43.6755],
+  'Nosy Be':      [-13.3317, 48.2649],
+};
+
+// OSRM profile mapping
+const OSRM_PROFILE = { driving: 'car', walking: 'foot', cycling: 'bike' };
+const MODE_LABEL = { driving: '🚗 Voiture', walking: '🚶 Pied', cycling: '🚲 Vélo' };
+
+function renderMap(b) {
+  const mapEl = document.getElementById('detail-map');
+  if (!mapEl) return;
+
+  // Reset routing state
+  if (leafletMap) { leafletMap.remove(); leafletMap = null; }
+  routingControl = null;
+  destMarker = null;
+  destCoords = null;
+
+  const baseCoords = CITY_COORDS[b.city] || [-18.9137, 47.5361];
+  leafletMap = L.map('detail-map', { zoomControl: true, scrollWheelZoom: false }).setView(baseCoords, 14);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
+    maxZoom: 19,
+  }).addTo(leafletMap);
+
+  // Red destination marker
+  const icon = L.divIcon({
+    html: `<div style="width:42px;height:42px;background:#E8412A;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 3px 14px rgba(232,65,42,.6)"><span style="display:block;transform:rotate(45deg);font-size:20px;text-align:center;line-height:36px">${b.emoji||'🏪'}</span></div>`,
+    iconSize: [42, 42], iconAnchor: [21, 42], popupAnchor: [0, -42], className: '',
+  });
+
+  const marker = L.marker(baseCoords, {icon}).addTo(leafletMap);
+  marker.bindPopup(`<div style="font-family:sans-serif;min-width:150px;padding:4px"><b style="font-size:.9rem">${b.name}</b><br><span style="font-size:.76rem;color:#666">${b.address||b.city}, Madagascar</span></div>`).openPopup();
+  destMarker = marker;
+  destCoords = baseCoords;
+
+  // Geocode exact address
+  const query = encodeURIComponent((b.address ? b.address + ', ' : '') + b.city + ', Madagascar');
+  fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1&countrycodes=mg`)
+    .then(r => r.json())
+    .then(data => {
+      if (data && data[0]) {
+        const lat = parseFloat(data[0].lat);
+        const lon = parseFloat(data[0].lon);
+        destCoords = [lat, lon];
+        leafletMap.setView([lat, lon], 16);
+        marker.setLatLng([lat, lon]);
+        marker.openPopup();
+      }
+    }).catch(()=>{});
+
+  // Address bar
+  const addrName = document.getElementById('map-addr-name');
+  const addrCity = document.getElementById('map-addr-city');
+  if (addrName) addrName.textContent = b.name;
+  if (addrCity) addrCity.textContent = (b.address ? b.address + ' — ' : '') + b.city + ', Madagascar';
+}
+
+function setRouteMode(mode) {
+  currentRouteMode = mode;
+  document.querySelectorAll('.route-mode-btn').forEach(btn => btn.classList.remove('active-mode'));
+  const btn = document.getElementById('mode-' + mode);
+  if (btn) btn.classList.add('active-mode');
+  const modeEl = document.getElementById('route-mode');
+  if (modeEl) modeEl.textContent = MODE_LABEL[mode];
+  // Re-calculate if route already shown
+  const input = document.getElementById('user-location-input');
+  if (input && input.value.trim() && document.getElementById('route-info').style.display !== 'none') {
+    getRouteFromInput();
+  }
+}
+
+function clearRoute() {
+  if (routingControl && leafletMap) {
+    leafletMap.removeControl(routingControl);
+    routingControl = null;
+  }
+  document.getElementById('route-info').style.display = 'none';
+}
+
+function useMyGPS() {
+  if (!navigator.geolocation) { showToast('⚠️ GPS non disponible sur cet appareil'); return; }
+  showToast('📡 Récupération de votre position...');
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const coords = [pos.coords.latitude, pos.coords.longitude];
+      document.getElementById('user-location-input').value = 'Ma position GPS';
+      buildRoute(coords);
+    },
+    () => showToast('⚠️ GPS introuvable — activez la localisation')
+  );
+}
+
+function getRouteFromInput() {
+  const input = document.getElementById('user-location-input');
+  const val = input ? input.value.trim() : '';
+  if (!val) { showToast('📌 Entrez votre position de départ'); return; }
+  showToast('🔍 Recherche de votre position...');
+  const q = encodeURIComponent(val + (val.toLowerCase().includes('madagascar') ? '' : ', Madagascar'));
+  fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`)
+    .then(r => r.json())
+    .then(data => {
+      if (data && data[0]) {
+        buildRoute([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
+      } else {
+        showToast('❌ Position introuvable. Essayez un quartier ou une ville.');
+      }
+    }).catch(() => showToast('❌ Erreur réseau'));
+}
+
+function buildRoute(fromCoords) {
+  if (!leafletMap || !destCoords) return;
+
+  // Remove old route
+  if (routingControl) { leafletMap.removeControl(routingControl); routingControl = null; }
+
+  const profile = OSRM_PROFILE[currentRouteMode] || 'car';
+
+  // Blue start marker
+  const startIcon = L.divIcon({
+    html: `<div style="width:32px;height:32px;background:#2563eb;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(37,99,235,.5);display:flex;align-items:center;justify-content:center;font-size:14px">📌</div>`,
+    iconSize: [32, 32], iconAnchor: [16, 16], className: '',
+  });
+
+  routingControl = L.Routing.control({
+    waypoints: [L.latLng(fromCoords), L.latLng(destCoords)],
+    router: L.Routing.osrmv1({
+      serviceUrl: `https://router.project-osrm.org/route/v1`,
+      profile: profile,
+    }),
+    lineOptions: {
+      styles: [{ color: '#E8412A', weight: 5, opacity: .85 }],
+      addWaypoints: false,
+    },
+    createMarker: (i, wp) => {
+      if (i === 0) return L.marker(wp.latLng, { icon: startIcon });
+      return null; // keep our custom dest marker
+    },
+    routeWhileDragging: false,
+    showAlternatives: false,
+    collapsible: true,
+    show: false, // hide default panel, we use our own
+  }).addTo(leafletMap);
+
+  routingControl.on('routesfound', e => {
+    const route = e.routes[0];
+    const dist = route.summary.totalDistance;
+    const time = route.summary.totalTime;
+
+    const distStr = dist >= 1000 ? (dist/1000).toFixed(1) + ' km' : Math.round(dist) + ' m';
+    const timeStr = time >= 3600
+      ? Math.floor(time/3600) + 'h ' + Math.floor((time%3600)/60) + 'min'
+      : Math.floor(time/60) + ' min';
+
+    document.getElementById('route-dist').textContent = distStr;
+    document.getElementById('route-time').textContent = timeStr;
+    document.getElementById('route-mode').textContent = MODE_LABEL[currentRouteMode];
+    document.getElementById('route-info').style.display = 'block';
+
+    // Step-by-step instructions
+    const stepsEl = document.getElementById('route-steps');
+    const TURN_ICONS = {
+      'SharpRight':'↱', 'Right':'→', 'SlightRight':'↗',
+      'Straight':'↑',
+      'SlightLeft':'↖', 'Left':'←', 'SharpLeft':'↰',
+      'Roundabout':'⟳', 'DestinationReached':'🏁', 'WaypointReached':'📍',
+    };
+    stepsEl.innerHTML = route.instructions.map(step => {
+      const icon = TURN_ICONS[step.type] || '•';
+      const d = step.distance >= 1000 ? (step.distance/1000).toFixed(1)+' km' : Math.round(step.distance)+' m';
+      return `<div class="route-step"><div class="step-icon">${icon}</div><div>${step.text} <span style="color:var(--red);font-weight:600">${d}</span></div></div>`;
+    }).join('');
+
+    // Fit map to route
+    leafletMap.fitBounds(routingControl.getBounds(), { padding: [30, 30] });
+    showToast('✅ Trajet calculé — ' + distStr + ' · ' + timeStr);
+  });
+
+  routingControl.on('routingerror', () => {
+    showToast('⚠️ Impossible de calculer le trajet pour ce mode. Essayez Voiture ou Pied.');
+  });
 }
 
 // ===== REGISTER =====
@@ -2572,6 +2979,78 @@ function removePhoto(i) {
   uploadedPhotos.splice(i, 1);
   renderPhotoPreviews();
 }
+
+
+// ===== HERO BACKGROUND SLIDESHOW =====
+const MADA_PHOTOS = [
+  {url:"https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=1400&h=700&fit=crop&q=85",caption:"Allée des Baobabs, Morondava"},
+  {url:"https://images.unsplash.com/photo-1566438480900-0609be27a4be?w=1400&h=700&fit=crop&q=85",caption:"Nosy Be — Plage paradisiaque"},
+  {url:"https://images.unsplash.com/photo-1528702748617-c64d49f918af?w=1400&h=700&fit=crop&q=85",caption:"Hautes Terres — Rizières en terrasses"},
+  {url:"https://images.unsplash.com/photo-1557456170-0cf4f4d0d362?w=1400&h=700&fit=crop&q=85",caption:"Lémuriens — Faune unique au monde"},
+  {url:"https://images.unsplash.com/photo-1553603227-2358aabe6206?w=1400&h=700&fit=crop&q=85",caption:"Tsingy de Bemaraha — UNESCO"},
+  {url:"https://images.unsplash.com/photo-1590928240229-c505fe88faff?w=1400&h=700&fit=crop&q=85",caption:"Antananarivo — La capitale"},
+  {url:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1400&h=700&fit=crop&q=85",caption:"Ifaty — Côte Sud de Madagascar"},
+  {url:"https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1400&h=700&fit=crop&q=85",caption:"Toamasina — Côte Est"},
+  {url:"https://images.unsplash.com/photo-1484406566174-9da000fda645?w=1400&h=700&fit=crop&q=85",caption:"Caméléon — Endémique de Madagascar"},
+  {url:"https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=1400&h=700&fit=crop&q=85&crop=bottom",caption:"Avenue des Baobabs au coucher du soleil"},
+  {url:"https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?w=1400&h=700&fit=crop&q=85",caption:"Cascade — Paysage naturel"},
+  {url:"https://images.unsplash.com/photo-1546527868-ccb7ee7dfa6a?w=1400&h=700&fit=crop&q=85",caption:"Nosy Komba — Île aux lémuriens"}
+];
+
+let heroBgIndex = 0;
+let heroBgTimer = null;
+
+function initHeroSlideshow() {
+  const heroEl = document.getElementById('hero-bg');
+  if (!heroEl) return;
+
+  // Preload first image
+  function applyPhoto(idx, animate) {
+    const p = MADA_PHOTOS[idx % MADA_PHOTOS.length];
+    if (animate) {
+      heroEl.style.opacity = '0.3';
+      setTimeout(() => {
+        heroEl.style.backgroundImage = `url(${p.url})`;
+        heroEl.style.opacity = '1';
+        updateCaption(p.caption);
+      }, 400);
+    } else {
+      heroEl.style.backgroundImage = `url(${p.url})`;
+      updateCaption(p.caption);
+    }
+  }
+
+  function updateCaption(text) {
+    const cap = document.getElementById('hero-caption');
+    if (cap) { cap.style.opacity='0'; setTimeout(()=>{cap.textContent=text;cap.style.opacity='1';},400); }
+  }
+
+  heroEl.style.transition = 'opacity 0.8s ease, background-image 0s';
+  applyPhoto(0, false);
+
+  heroBgTimer = setInterval(() => {
+    heroBgIndex = (heroBgIndex + 1) % MADA_PHOTOS.length;
+    applyPhoto(heroBgIndex, true);
+    document.querySelectorAll('.hero-dot').forEach((d,j)=>d.classList.toggle('dot-active', j===heroBgIndex));
+  }, 60000);
+
+  // Dot indicators click
+  document.querySelectorAll('.hero-dot').forEach((dot, i) => {
+    dot.addEventListener('click', () => {
+      heroBgIndex = i;
+      applyPhoto(i, true);
+      clearInterval(heroBgTimer);
+      heroBgTimer = setInterval(() => {
+        heroBgIndex = (heroBgIndex + 1) % MADA_PHOTOS.length;
+        applyPhoto(heroBgIndex, true);
+      }, 60000);
+      document.querySelectorAll('.hero-dot').forEach((d,j)=>d.classList.toggle('dot-active', j===i));
+    });
+  });
+}
+
+// Init on load
+document.addEventListener('DOMContentLoaded', initHeroSlideshow);
 
 </script>
 
