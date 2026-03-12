@@ -1,12 +1,20 @@
-from flask import Flask, send_file
+
+
 import os
+from flask import Flask, send_file
  
 app = Flask(__name__)
  
 @app.route('/')
-@app.route('/index.html')
-def home():
-    return send_file('madafind.html')
+def index():
+    base = os.path.dirname(os.path.abspath(__file__))
+    return send_file(os.path.join(base, 'madafind.html'))
+ 
+@app.route('/madafind.html')
+def madafind():
+    base = os.path.dirname(os.path.abspath(__file__))
+    return send_file(os.path.join(base, 'madafind.html'))
  
 if __name__ == '__main__':
-    app.run()
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
