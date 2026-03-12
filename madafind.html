@@ -16,11 +16,11 @@ body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-he
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 @keyframes fadeDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:none}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-
+ 
 /* PAGE SYSTEM */
 .page{display:none;animation:fadeUp .4s ease both;}
 .page.active{display:block;}
-
+ 
 /* NAV */
 nav{position:sticky;top:0;z-index:100;background:rgba(15,15,15,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;}
 .nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:60px;}
@@ -37,7 +37,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(15,15,15,.95);backdrop-fil
 .btn-red:hover{opacity:.85;}
 .lang-toggle{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:8px;font-size:.75rem;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;transition:all .2s;}
 .lang-toggle:hover{color:var(--text);}
-
+ 
 /* ===== HOME PAGE ===== */
 .hero{padding:70px 24px 50px;text-align:center;position:relative;overflow:hidden;}
 .hero::before{content:'';position:absolute;inset:0;background:linear-gradient(to bottom, rgba(0,0,0,.65) 0%, rgba(0,0,0,.55) 100%);pointer-events:none;z-index:0;}
@@ -46,7 +46,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(15,15,15,.95);backdrop-fil
 .hero h1{font-size:clamp(2rem,5vw,3.6rem);font-weight:800;line-height:1.1;margin-bottom:14px;letter-spacing:-1.5px;}
 .hero h1 em{color:var(--red);font-style:normal;}
 .hero p{color:var(--muted);font-size:.95rem;max-width:500px;margin:0 auto 32px;line-height:1.7;}
-
+ 
 .search-box{max-width:620px;margin:0 auto 16px;background:var(--card);border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;padding:6px 6px 6px 18px;box-shadow:0 8px 40px rgba(0,0,0,.3);transition:border-color .2s;}
 .search-box:focus-within{border-color:var(--red);}
 .search-box input{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'Sora',sans-serif;font-size:.9rem;padding:8px 0;}
@@ -56,27 +56,27 @@ nav{position:sticky;top:0;z-index:100;background:rgba(15,15,15,.95);backdrop-fil
 .search-tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:0;}
 .stag{background:var(--card);border:1px solid var(--border);color:var(--muted);font-size:.7rem;padding:5px 12px;border-radius:20px;cursor:pointer;transition:all .2s;}
 .stag:hover{border-color:var(--red);color:var(--red);}
-
+ 
 .stats-bar{background:var(--dark2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:18px 24px;}
 .stats-inner{max-width:1200px;margin:0 auto;display:flex;justify-content:center;gap:48px;flex-wrap:wrap;}
 .stat{text-align:center;}
 .stat-num{font-size:1.5rem;font-weight:800;color:var(--red);}
 .stat-lbl{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
-
+ 
 .section{max-width:1200px;margin:0 auto;padding:40px 24px;}
 .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
 .section-title{font-size:1rem;font-weight:700;}
 .section-title span{color:var(--red);}
 .see-all{color:var(--muted);font-size:.75rem;cursor:pointer;transition:color .2s;}
 .see-all:hover{color:var(--red);}
-
+ 
 .cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-bottom:40px;}
 .cat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 10px;text-align:center;cursor:pointer;transition:all .2s;}
 .cat-card:hover{transform:translateY(-3px);border-color:var(--red);}
 .cat-icon{font-size:1.6rem;margin-bottom:6px;}
 .cat-name{font-size:.7rem;font-weight:600;}
 .cat-count{font-size:.6rem;color:var(--muted);margin-top:2px;}
-
+ 
 .listings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
 .listing-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .25s;animation:fadeUp .5s ease both;}
 .listing-card:hover{transform:translateY(-4px);border-color:#333;box-shadow:0 16px 48px rgba(0,0,0,.4);}
@@ -92,7 +92,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(15,15,15,.95);backdrop-fil
 .listing-meta{display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border);}
 .listing-loc{font-size:.68rem;color:var(--muted);}
 .listing-stars{font-size:.68rem;color:var(--orange);font-weight:600;}
-
+ 
 .premium-banner{background:linear-gradient(135deg,#1a0800,#2a1000);border:1px solid rgba(232,65,42,.25);border-radius:18px;padding:36px 40px;display:flex;align-items:center;justify-content:space-between;gap:24px;margin-top:40px;position:relative;overflow:hidden;}
 .premium-banner::before{content:'';position:absolute;right:-40px;top:-40px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(232,65,42,.12) 0%,transparent 70%);}
 .pb-left h2{font-size:1.3rem;font-weight:800;margin-bottom:8px;}
@@ -103,7 +103,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(15,15,15,.95);backdrop-fil
 .pb-period{font-size:.68rem;color:var(--muted);margin-bottom:14px;}
 .pb-btn{background:var(--red);color:white;border:none;padding:10px 24px;border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer;font-family:'Sora',sans-serif;width:100%;transition:opacity .2s;}
 .pb-btn:hover{opacity:.85;}
-
+ 
 /* ===== LISTING PAGE ===== */
 .listing-page-header{background:var(--dark2);border-bottom:1px solid var(--border);padding:24px;}
 .listing-filters{max-width:1200px;margin:0 auto;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
@@ -111,7 +111,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(15,15,15,.95);backdrop-fil
 .filter-input:focus{border-color:var(--red);}
 .filter-select{background:var(--card);border:1px solid var(--border);color:var(--text);padding:9px 16px;border-radius:10px;font-family:'Sora',sans-serif;font-size:.8rem;outline:none;cursor:pointer;}
 .results-count{color:var(--muted);font-size:.78rem;padding:12px 0;}
-
+ 
 /* ===== DETAIL PAGE ===== */
 .detail-hero{background:var(--dark2);border-bottom:1px solid var(--border);padding:32px 24px;}
 .detail-inner{max-width:1000px;margin:0 auto;display:flex;gap:28px;align-items:flex-start;}
@@ -135,7 +135,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(15,15,15,.95);backdrop-fil
 .contact-btn:hover{opacity:.85;}
 .back-btn{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:.78rem;cursor:pointer;transition:color .2s;margin-bottom:20px;padding:0 24px;}
 .back-btn:hover{color:var(--red);}
-
+ 
 /* ===== REGISTER PAGE ===== */
 .register-page{max-width:700px;margin:0 auto;padding:40px 24px;}
 .register-page h2{font-size:1.6rem;font-weight:800;margin-bottom:6px;}
@@ -160,7 +160,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(15,15,15,.95);backdrop-fil
 .plan-card ul{margin-top:10px;list-style:none;}
 .plan-card ul li{font-size:.72rem;color:var(--muted);padding:3px 0;}
 .plan-card ul li::before{content:'✓ ';color:var(--green);}
-
+ 
 /* ===== ADMIN PAGE ===== */
 .admin-page{max-width:1100px;margin:0 auto;padding:32px 24px;}
 .admin-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;}
@@ -182,21 +182,21 @@ nav{position:sticky;top:0;z-index:100;background:rgba(15,15,15,.95);backdrop-fil
 .admin-login{max-width:400px;margin:80px auto;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:36px;text-align:center;}
 .admin-login h3{font-size:1.2rem;font-weight:700;margin-bottom:6px;}
 .admin-login p{color:var(--muted);font-size:.8rem;margin-bottom:24px;}
-
+ 
 /* SUCCESS PAGE */
 .success-page{max-width:500px;margin:80px auto;text-align:center;padding:24px;}
 .success-icon{font-size:4rem;margin-bottom:20px;}
 .success-page h2{font-size:1.5rem;font-weight:800;margin-bottom:10px;}
 .success-page p{color:var(--muted);font-size:.88rem;line-height:1.6;margin-bottom:28px;}
-
+ 
 /* FOOTER */
 footer{background:var(--dark2);border-top:1px solid var(--border);padding:28px 24px;text-align:center;color:var(--muted);font-size:.72rem;margin-top:40px;}
 footer strong{color:var(--red);}
-
+ 
 /* TOAST */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:white;padding:12px 24px;border-radius:12px;font-size:.82rem;font-weight:600;box-shadow:0 8px 32px rgba(0,0,0,.3);transition:transform .3s cubic-bezier(.16,1,.3,1);z-index:999;}
 .toast.show{transform:translateX(-50%) translateY(0);}
-
+ 
 @media(max-width:768px){
   .nav-links{display:none;}
   .form-grid{grid-template-columns:1fr;}
@@ -212,7 +212,7 @@ footer strong{color:var(--red);}
 </style>
 </head>
 <body>
-
+ 
 <!-- NAV -->
 <nav>
   <div class="nav-inner">
@@ -231,7 +231,7 @@ footer strong{color:var(--red);}
     </div>
   </div>
 </nav>
-
+ 
 <!-- ===== HOME PAGE ===== -->
 <div class="page active" id="page-home">
   <div class="hero" style="background-image:url(https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=1400&q=80);background-size:cover;background-position:center;position:relative;">
@@ -252,7 +252,7 @@ footer strong{color:var(--red);}
       <div class="stag" onclick="filterAndGo('Banques')">🏦 Banques</div>
     </div>
   </div>
-
+ 
   <div class="stats-bar">
     <div class="stats-inner">
       <div class="stat"><div class="stat-num" id="stat-total">0</div><div class="stat-lbl">Entreprises</div></div>
@@ -261,19 +261,19 @@ footer strong{color:var(--red);}
       <div class="stat"><div class="stat-num">100%</div><div class="stat-lbl">Gratuit</div></div>
     </div>
   </div>
-
+ 
   <div class="section">
     <div class="section-head">
       <div class="section-title"><span>●</span> Catégories</div>
     </div>
     <div class="cat-grid" id="home-cats"></div>
-
+ 
     <div class="section-head">
       <div class="section-title"><span>●</span> Dernières inscriptions</div>
       <div class="see-all" onclick="showPage('listings')">Voir tout →</div>
     </div>
     <div class="listings-grid" id="home-listings"></div>
-
+ 
     <div class="premium-banner">
       <div class="pb-left">
         <h2>Inscrivez votre <span>commerce</span> sur MadaFind</h2>
@@ -286,10 +286,10 @@ footer strong{color:var(--red);}
       </div>
     </div>
   </div>
-
+ 
   <footer><strong>MadaFind</strong> — L'annuaire numérique de Madagascar 🇲🇬<br><span style="margin-top:6px;display:block">© 2026 · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="54373b3a203537201439353035323d3a307a3933">[email&#160;protected]</a></span></footer>
 </div>
-
+ 
 <!-- ===== LISTINGS PAGE ===== -->
 <div class="page" id="page-listings">
   <div class="listing-page-header">
@@ -309,7 +309,7 @@ footer strong{color:var(--red);}
   </div>
   <footer><strong>MadaFind</strong> — © 2026</footer>
 </div>
-
+ 
 <!-- ===== DETAIL PAGE ===== -->
 <div class="page" id="page-detail">
   <div class="back-btn" onclick="showPage('listings')">← Retour aux résultats</div>
@@ -318,13 +318,13 @@ footer strong{color:var(--red);}
   </div>
   <div class="detail-content" id="detail-body"></div>
 </div>
-
+ 
 <!-- ===== REGISTER PAGE ===== -->
 <div class="page" id="page-register">
   <div class="register-page">
     <h2>Inscrivez votre <span>commerce</span></h2>
     <p>Remplissez ce formulaire pour apparaître sur MadaFind. Notre équipe validera votre fiche sous 24h.</p>
-
+ 
     <div class="form-card">
       <div style="margin-bottom:20px">
         <div class="form-label" style="margin-bottom:10px">Choisissez votre plan</div>
@@ -343,7 +343,7 @@ footer strong{color:var(--red);}
           </div>
         </div>
       </div>
-
+ 
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">Nom du commerce *</label>
@@ -402,7 +402,7 @@ footer strong{color:var(--red);}
     </div>
   </div>
 </div>
-
+ 
 <!-- ===== SUCCESS PAGE ===== -->
 <div class="page" id="page-success">
   <div class="success-page">
@@ -412,7 +412,7 @@ footer strong{color:var(--red);}
     <button class="btn-red" onclick="showPage('home')">Retour à l'accueil</button>
   </div>
 </div>
-
+ 
 <!-- ===== ADMIN LOGIN ===== -->
 <div class="page" id="page-admin-login">
   <div class="admin-login">
@@ -426,7 +426,7 @@ footer strong{color:var(--red);}
     <div style="color:var(--muted);font-size:.7rem;margin-top:12px">Mot de passe : madafind2026</div>
   </div>
 </div>
-
+ 
 <!-- ===== ADMIN PAGE ===== -->
 <div class="page" id="page-admin">
   <div class="admin-page">
@@ -448,9 +448,9 @@ footer strong{color:var(--red);}
     </div>
   </div>
 </div>
-
+ 
 <div class="toast" id="toast"></div>
-
+ 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ===== DATA =====
 const CATS = [
@@ -467,7 +467,7 @@ const CATS = [
   {name:'Garage & Auto',icon:'🔧',count:0},
   {name:'Autre',icon:'🏪',count:0},
 ];
-
+ 
 // Données initiales
 let businesses = [
   {id:1,name:'Le Romazava',cat:'Restaurants',city:'Antananarivo',phone:'+261 34 11 111 11',address:'Lot II K 23, Analakely, Antananarivo',desc:'Cuisine malgache traditionnelle au cœur d\'Antananarivo. Spécialités : romazava, ravitoto, vary amin\'anana. Ambiance chaleureuse et authentique.',email:'romazava@email.com',web:'',hours:'Lun-Dim 11h-22h',emoji:'🍛',rating:4.9,reviews:128,status:'active',plan:'premium',badge:'premium'},
@@ -481,16 +481,16 @@ let businesses = [
   {id:9,name:'Taxi Be Mahajanga',cat:'Taxis',city:'Mahajanga',phone:'+261 32 55 555 55',address:'Gare routière de Mahajanga',desc:'Service de taxi fiable à Mahajanga. Transferts aéroport, excursions touristiques, transport quotidien.',email:'',web:'',hours:'6h-22h',emoji:'🚕',rating:4.4,reviews:34,status:'active',plan:'basic',badge:''},
   {id:10,name:'Hôtel Joffre',cat:'Hôtels',city:'Toamasina',phone:'+261 20 53 300 00',address:'Bvd Joffre, Toamasina',desc:'Hôtel historique de Toamasina. Chambres confortables, restaurant, proche du port et des plages.',email:'joffre@hotel.mg',web:'',hours:'24h/24',emoji:'🏩',rating:4.4,reviews:52,status:'active',plan:'basic',badge:''},
 ];
-
+ 
 let currentLang = 'fr';
 let selectedPlan = 'basic';
 let currentFilter = '';
-
+ 
 const translations = {
   fr: {heroTitle:'Trouvez tout à<br><em>Madagascar</em>',heroSub:'Restaurants, hôtels, commerces, services... Les meilleures adresses de la Grande Île.',searchPh:'Restaurant, hôtel, pharmacie...'},
   mg: {heroTitle:'Mahita zavatra rehetra<br><em>Madagasikara</em>',heroSub:'Trano fisakafoana, hotely, fivarotana... Ny toerana tsara indrindra eto Madagasikara.',searchPh:'Trano fisakafoana, hotely, farmasια...'},
 };
-
+ 
 // ===== UTILS =====
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -500,19 +500,19 @@ function showPage(id) {
   if(id==='home') { renderHome(); }
   if(id==='admin') { renderAdmin(); }
 }
-
+ 
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 2500);
 }
-
+ 
 // ===== HOME =====
 function renderHome() {
   // Stats
   document.getElementById('stat-total').textContent = businesses.filter(b=>b.status==='active').length;
-
+ 
   // Categories
   const catGrid = document.getElementById('home-cats');
   catGrid.innerHTML = CATS.map(c => {
@@ -523,12 +523,12 @@ function renderHome() {
       <div class="cat-count">${count} adresse${count>1?'s':''}</div>
     </div>`;
   }).join('');
-
+ 
   // Latest listings
   const latest = businesses.filter(b=>b.status==='active').slice(-6).reverse();
   document.getElementById('home-listings').innerHTML = latest.map(b=>cardHTML(b)).join('');
 }
-
+ 
 const PHOTOS = {
     'Restaurants': 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&q=80',
     'Hôtels': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=80',
@@ -543,7 +543,7 @@ const PHOTOS = {
     'Garage & Auto': 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400&q=80',
     'Autre': 'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=400&q=80',
 };
-
+ 
 function cardHTML(b) {
   const photo = b.photo || PHOTOS[b.cat] || PHOTOS['Autre'];
   const badgeHTML = b.badge==='premium' ? '<div class="badge badge-premium">⭐ Premium</div>' :
@@ -565,7 +565,7 @@ function cardHTML(b) {
     </div>
   </div>`;
 }
-
+ 
 // ===== LISTINGS =====
 function populateFilters() {
   const catSel = document.getElementById('filter-cat');
@@ -575,7 +575,7 @@ function populateFilters() {
   catSel.innerHTML = '<option value="">Toutes catégories</option>' + cats.map(c=>`<option ${c===currentFilter?'selected':''}>${c}</option>`).join('');
   citySel.innerHTML = '<option value="">Toutes villes</option>' + cities.map(c=>`<option>${c}</option>`).join('');
 }
-
+ 
 function renderListings() {
   const q = (document.getElementById('filter-search')?.value||'').toLowerCase();
   const cat = document.getElementById('filter-cat')?.value||'';
@@ -587,7 +587,7 @@ function renderListings() {
   document.getElementById('results-count').textContent = `${results.length} résultat${results.length>1?'s':''}`;
   document.getElementById('all-listings').innerHTML = results.length ? results.map(b=>cardHTML(b)).join('') : '<div style="color:var(--muted);padding:40px;text-align:center;grid-column:1/-1">Aucun résultat trouvé.</div>';
 }
-
+ 
 function filterAndGo(cat) {
   currentFilter = cat;
   showPage('listings');
@@ -596,7 +596,7 @@ function filterAndGo(cat) {
     renderListings();
   }, 100);
 }
-
+ 
 function doSearch() {
   const q = document.getElementById('home-search').value;
   showPage('listings');
@@ -605,14 +605,14 @@ function doSearch() {
     renderListings();
   }, 100);
 }
-
+ 
 // ===== DETAIL =====
 function showDetail(id) {
   const b = businesses.find(x=>x.id===id);
   if(!b) return;
   const colors = {'Restaurants':'#1a0800,#3d1500','Hôtels':'#001a0d,#003d1a'};
   const c = '1a1a1a,2d2d2d';
-
+ 
   document.getElementById('detail-hero-content').innerHTML = `
     <div class="detail-icon" style="background:linear-gradient(135deg,#${c})">${b.emoji||'🏪'}</div>
     <div class="detail-info">
@@ -629,7 +629,7 @@ function showDetail(id) {
         ${b.hours?`<div class="detail-tag">🕐 ${b.hours}</div>`:''}
       </div>
     </div>`;
-
+ 
   document.getElementById('detail-body').innerHTML = `
     <div>
       <div class="detail-section">
@@ -657,17 +657,17 @@ function showDetail(id) {
         <button class="contact-btn" style="background:var(--dark2);border:1px solid var(--border)" onclick="showToast('🔗 Lien copié !')">🔗 Copier le lien</button>
       </div>
     </div>`;
-
+ 
   showPage('detail');
 }
-
+ 
 // ===== REGISTER =====
 function selectPlan(plan) {
   selectedPlan = plan;
   document.getElementById('plan-basic').classList.toggle('selected', plan==='basic');
   document.getElementById('plan-premium').classList.toggle('selected', plan==='premium');
 }
-
+ 
 function submitForm() {
   const name = document.getElementById('f-name').value.trim();
   const cat = document.getElementById('f-cat').value;
@@ -689,14 +689,14 @@ function submitForm() {
   businesses.push(newBiz);
   showPage('success');
 }
-
+ 
 // ===== ADMIN =====
 function adminLogin() {
   const pwd = document.getElementById('admin-pwd').value;
   if(pwd === 'madafind2026') { showPage('admin'); }
   else { showToast('❌ Mot de passe incorrect'); }
 }
-
+ 
 function renderAdmin() {
   const active = businesses.filter(b=>b.status==='active').length;
   const pending = businesses.filter(b=>b.status==='pending').length;
@@ -705,7 +705,7 @@ function renderAdmin() {
   document.getElementById('adm-active').textContent = active;
   document.getElementById('adm-pending').textContent = pending;
   document.getElementById('adm-revenue').textContent = revenue.toLocaleString();
-
+ 
   document.getElementById('admin-rows').innerHTML = businesses.map(b=>`
     <div class="table-row">
       <span style="font-weight:600">${b.emoji} ${b.name}</span>
@@ -718,20 +718,31 @@ function renderAdmin() {
       </span>
     </div>`).join('');
 }
-
+ 
 function approveB(id) {
   const b = businesses.find(x=>x.id===id);
   if(b) { b.status='active'; renderAdmin(); showToast('✅ Fiche approuvée !'); }
 }
-
+ 
 function deleteB(id) {
   businesses = businesses.filter(x=>x.id!==id);
   renderAdmin(); showToast('🗑️ Fiche supprimée');
 }
-
+ 
 // ===== LANG =====
 function toggleLang() {
   currentLang = currentLang==='fr' ? 'mg' : 'fr';
   document.getElementById('lang-btn').textContent = currentLang==='fr' ? '🇲🇬 MG' : '🇫🇷 FR';
   const t = translations[currentLang];
-  document.getEl
+  document.getElementById('hero-title').innerHTML = t.heroTitle;
+  document.getElementById('hero-sub').textContent = t.heroSub;
+  document.getElementById('home-search').placeholder = t.searchPh;
+}
+ 
+// INIT
+document.addEventListener('DOMContentLoaded', function() {
+  renderHome();
+});
+</script>
+</body>
+</html>
