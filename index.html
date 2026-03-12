@@ -803,18 +803,25 @@ function payGoStep2() {
 }
 
 function payVerify() {
-  var code = document.getElementById('pay-code').value.trim();
-  if(!code || code.length < 4) { showToast('⚠️ Entrez votre code MVola'); return; }
+  var code = document.getElementById('pay-code').value.trim().toUpperCase();
+  if(!code || code.length < 4) { showToast('Entrez votre code MVola'); return; }
+  if(!code.startsWith('TXN')) { showToast('Le code doit commencer par TXN'); return; }
   var btn = document.getElementById('pay-verify-btn');
-  btn.textContent = '⏳ Vérification...';
+  btn.textContent = 'Verification...';
   btn.disabled = true;
   setTimeout(function() {
     if(payTimer) clearInterval(payTimer);
     var now = new Date();
     document.getElementById('pay-txn-code').textContent = code;
     document.getElementById('pay-txn-date').textContent = now.toLocaleDateString('fr-FR')+' '+now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    if(businesses.length > 0) {
+      var last = businesses[businesses.length-1];
+      last.status = 'pending_payment';
+      last.txnCode = code;
+      last.txnDate = now.toISOString();
+    }
     setPayStep(3);
-    btn.textContent = '✅ Valider';
+    btn.textContent = 'Valider';
     btn.disabled = false;
   }, 2000);
 }
@@ -840,9 +847,14 @@ function renderAdmin() {
       <span style="font-weight:600">${b.emoji} ${b.name}</span>
       <span style="color:var(--muted)">${b.cat}</span>
       <span style="color:var(--muted)">${b.city}</span>
-      <span><span class="status-badge status-${b.status}">${b.status==='active'?'Actif':b.status==='pending'?'En attente':'Expiré'}</span></span>
       <span>
-        ${b.status==='pending'?`<span class="action-link" onclick="approveB(${b.id})">✅ Approuver</span> `:''}
+        ${b.status==='active'?'<span class="status-badge status-active">✅ Actif</span>':
+          b.status==='pending_payment'?`<span class="status-badge" style="background:rgba(255,152,0,.15);color:#FF9800">💳 TXN: ${b.txnCode||'?'}</span>`:
+          b.status==='pending'?'<span class="status-badge status-pending">⏳ En attente</span>':
+          '<span class="status-badge">Expiré</span>'}
+      </span>
+      <span>
+        ${b.status==='pending'||b.status==='pending_payment'?`<span class="action-link" onclick="approveB(${b.id})">✅ Approuver</span> `:''}
         <span class="action-link" style="color:var(--muted)" onclick="deleteB(${b.id})">🗑️</span>
       </span>
     </div>`).join('');
@@ -1108,7 +1120,11 @@ function removePhoto(i) {
         <div style="display:flex;justify-content:space-between;padding:11px 14px;font-size:.78rem;"><span style="color:#888;">Date</span><span style="font-weight:600;" id="pay-txn-date">—</span></div>
       </div>
       <div style="color:#888;font-size:.75rem;line-height:1.6;margin-bottom:20px;">Fiche validée sous <strong style="color:#F2F0EB">24h</strong>. Confirmation par SMS.</div>
-      <button onclick="closePayModal();showPage('success');" style="width:100%;background:#00C853;color:#000;border:none;padding:13px;border-radius:10px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:Sora,sans-serif;">Terminer →</button>
+      <div style="background:rgba(255,193,7,.08);border:1px solid rgba(255,193,7,.3);border-radius:12px;padding:14px;margin-bottom:16px;text-align:left;">
+      <div style="font-size:.85rem;font-weight:700;color:#FFC107;margin-bottom:6px;">⏳ En attente de validation</div>
+      <div style="font-size:.75rem;color:#aaa;line-height:1.6;">Votre paiement a été enregistré. Notre équipe va vérifier votre transaction MVola et activer votre fiche sous <strong style="color:#F2F0EB">24h</strong>. Vous recevrez un SMS de confirmation.</div>
+    </div>
+    <button onclick="closePayModal();showPage('success');" style="width:100%;background:#00C853;color:#000;border:none;padding:13px;border-radius:10px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:Sora,sans-serif;">Terminer →</button>
     </div>
   </div>
 </div>
