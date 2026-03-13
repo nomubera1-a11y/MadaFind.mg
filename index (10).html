@@ -1,0 +1,3358 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
+<title>MadaFind — Annuaire Madagascar</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root {
+  --red: #E8412A; --green: #1A6B3A; --orange: #F5A623;
+  --dark: #0F0F0F; --dark2: #1A1A1A; --card: #1E1E1E;
+  --border: #2A2A2A; --text: #F2F0EB; --muted: #888; --bg: #141414;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* PAGE SYSTEM */
+.page{display:none;animation:fadeUp .4s ease both;}
+.page.active{display:block;}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(15,15,15,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;}
+.nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:60px;}
+.nav-logo{font-size:1.2rem;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;}
+.nav-logo span{color:var(--red);}
+.nav-logo small{font-size:.58rem;font-weight:400;color:var(--muted);display:block;margin-top:-3px;}
+.nav-links{display:flex;gap:20px;}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:.8rem;cursor:pointer;transition:color .2s;}
+.nav-links a:hover{color:var(--text);}
+.nav-right{display:flex;gap:10px;}
+.btn-outline{background:none;border:1px solid var(--border);color:var(--text);padding:8px 16px;border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;transition:all .2s;}
+.btn-outline:hover{border-color:var(--red);color:var(--red);}
+.btn-red{background:var(--red);color:white;border:none;padding:8px 16px;border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;transition:opacity .2s;}
+.btn-red:hover{opacity:.85;}
+.lang-toggle{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:8px;font-size:.75rem;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;transition:all .2s;}
+.lang-toggle:hover{color:var(--text);}
+
+/* ===== HOME PAGE ===== */
+.hero{padding:70px 24px 30px;text-align:center;position:relative;overflow:hidden;}
+.hero-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer;transition:all .3s;display:inline-block;}
+.hero-dot:hover{background:rgba(255,255,255,.7);}
+.dot-active{background:#fff !important;width:20px !important;border-radius:4px !important;}
+.hero>*{position:relative;z-index:2;}
+.hero-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(232,65,42,.12);border:1px solid rgba(232,65,42,.25);color:#ff7a6a;font-size:.68rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:5px 14px;border-radius:20px;margin-bottom:20px;}
+.hero h1{font-size:clamp(2rem,5vw,3.6rem);font-weight:800;line-height:1.1;margin-bottom:14px;letter-spacing:-1.5px;}
+.hero h1 em{color:var(--red);font-style:normal;}
+.hero p{color:var(--muted);font-size:.95rem;max-width:500px;margin:0 auto 32px;line-height:1.7;}
+
+.search-box{max-width:620px;margin:0 auto 16px;background:var(--card);border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;padding:6px 6px 6px 18px;box-shadow:0 8px 40px rgba(0,0,0,.3);transition:border-color .2s;}
+.search-box:focus-within{border-color:var(--red);}
+.search-box input{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'Sora',sans-serif;font-size:.9rem;padding:8px 0;}
+.search-box input::placeholder{color:#444;}
+.search-btn{background:var(--red);color:white;border:none;padding:10px 22px;border-radius:10px;font-size:.82rem;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;transition:opacity .2s;}
+.search-btn:hover{opacity:.85;}
+.search-tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:0;}
+.stag{background:var(--card);border:1px solid var(--border);color:var(--muted);font-size:.7rem;padding:5px 12px;border-radius:20px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;}
+.stag-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.stag:hover{border-color:var(--red);color:var(--red);}
+
+.stats-bar{background:var(--dark2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:18px 24px;}
+.stats-inner{max-width:1200px;margin:0 auto;display:flex;justify-content:center;gap:48px;flex-wrap:wrap;}
+.stat{text-align:center;}
+.stat-num{font-size:1.5rem;font-weight:800;color:var(--red);}
+.stat-lbl{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+
+.section{max-width:1200px;margin:0 auto;padding:40px 24px;}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.section-title{font-size:1rem;font-weight:700;}
+.section-title span{color:var(--red);}
+.see-all{color:var(--muted);font-size:.75rem;cursor:pointer;transition:color .2s;}
+.see-all:hover{color:var(--red);}
+
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-bottom:40px;}
+.cat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 10px;text-align:center;cursor:pointer;transition:all .2s;}
+.cat-card:hover{transform:translateY(-3px);border-color:var(--red);}
+.cat-card{overflow:hidden;padding:0 !important;border-radius:14px !important;}
+.cat-img-wrap{height:80px;background-size:cover;background-position:center;position:relative;display:flex;align-items:center;justify-content:center;}
+.cat-img-overlay{position:absolute;inset:0;background:rgba(0,0,0,.45);}
+.cat-svg-icon{position:relative;z-index:1;width:32px;height:32px;color:#fff;flex-shrink:0;}
+.cat-body{padding:10px 12px;}
+.cat-name{font-size:.72rem;font-weight:700;}
+.cat-count{font-size:.6rem;color:var(--muted);margin-top:2px;}
+
+.listings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+.listing-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .25s;animation:fadeUp .5s ease both;}
+.listing-card:hover{transform:translateY(-4px);border-color:#333;box-shadow:0 16px 48px rgba(0,0,0,.4);}
+.listing-img{height:160px;display:flex;align-items:center;justify-content:center;font-size:3rem;position:relative;border-radius:14px 14px 0 0;overflow:hidden;background-size:cover;background-position:center;}
+.badge{position:absolute;top:10px;left:10px;font-size:.58rem;font-weight:700;padding:3px 8px;border-radius:5px;text-transform:uppercase;}
+.badge-premium{background:var(--orange);color:#000;}
+.badge-new{background:var(--green);color:white;}
+.badge-verified{background:#3B82F6;color:white;}
+.listing-body{padding:14px 16px;}
+.listing-cat{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--red);margin-bottom:4px;}
+.listing-name{font-size:.95rem;font-weight:700;margin-bottom:4px;}
+.listing-desc{font-size:.75rem;color:var(--muted);line-height:1.5;margin-bottom:10px;}
+.listing-meta{display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border);}
+.listing-loc{font-size:.68rem;color:var(--muted);}
+.listing-stars{font-size:.68rem;color:var(--orange);font-weight:600;}
+
+.premium-banner{background:linear-gradient(135deg,#1a0800,#2a1000);border:1px solid rgba(232,65,42,.25);border-radius:18px;padding:36px 40px;display:flex;align-items:center;justify-content:space-between;gap:24px;margin-top:40px;position:relative;overflow:hidden;}
+.premium-banner::before{content:'';position:absolute;right:-40px;top:-40px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(232,65,42,.12) 0%,transparent 70%);}
+.pb-left h2{font-size:1.3rem;font-weight:800;margin-bottom:8px;}
+.pb-left h2 span{color:var(--red);}
+.pb-left p{color:var(--muted);font-size:.82rem;line-height:1.6;}
+.pb-price{text-align:center;flex-shrink:0;background:rgba(232,65,42,.08);border:1px solid rgba(232,65,42,.2);border-radius:14px;padding:20px 28px;}
+.pb-amount{font-size:1.8rem;font-weight:800;color:var(--red);}
+.pb-period{font-size:.68rem;color:var(--muted);margin-bottom:14px;}
+.pb-btn{background:var(--red);color:white;border:none;padding:10px 24px;border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer;font-family:'Sora',sans-serif;width:100%;transition:opacity .2s;}
+.pb-btn:hover{opacity:.85;}
+
+/* ===== LISTING PAGE ===== */
+.listing-page-header{background:var(--dark2);border-bottom:1px solid var(--border);padding:16px 24px 0;}
+.listing-filters{max-width:1200px;margin:0 auto;display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding-bottom:14px;}
+/* City pills */
+.city-pills{max-width:1200px;margin:0 auto;display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:16px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+.city-pills::-webkit-scrollbar{display:none;}
+.city-pill{background:transparent;border:1px solid var(--border);color:var(--muted);padding:7px 16px;border-radius:100px;font-family:'Sora',sans-serif;font-size:.75rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .2s;letter-spacing:.3px;}
+.city-pill:hover{border-color:var(--red);color:var(--text);}
+.city-pill.active{background:var(--red);border-color:var(--red);color:#fff;}
+/* Map on detail page */
+#detail-map{width:100%;height:280px;border-radius:14px;overflow:hidden;margin-top:14px;border:1px solid var(--border);}
+.route-mode-btn{background:var(--dark2);border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:100px;font-family:Sora,sans-serif;font-size:.72rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.layer-btn{background:var(--dark2);border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:8px;font-family:Sora,sans-serif;font-size:.72rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.layer-btn:hover{border-color:var(--red);color:var(--text);}
+.active-layer{background:var(--red) !important;border-color:var(--red) !important;color:#fff !important;}
+.route-mode-btn:hover{border-color:var(--red);color:var(--text);}
+.active-mode{background:var(--red) !important;border-color:var(--red) !important;color:#fff !important;}
+.route-step{display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:.72rem;color:var(--muted);}
+.route-step:last-child{border-bottom:none;}
+.step-icon{width:20px;height:20px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;color:#fff;flex-shrink:0;margin-top:1px;}
+.map-placeholder{width:100%;height:220px;border-radius:14px;background:var(--dark2);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;margin-top:14px;color:var(--muted);font-size:.8rem;}
+.map-link-btn{display:inline-flex;align-items:center;gap:8px;background:var(--red);color:#fff;border:none;padding:10px 20px;border-radius:10px;font-family:'Sora',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;margin-top:10px;text-decoration:none;}
+.listing-filters{max-width:1200px;margin:0 auto;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.filter-input{background:var(--card);border:1px solid var(--border);color:var(--text);padding:9px 16px;border-radius:10px;font-family:'Sora',sans-serif;font-size:.8rem;outline:none;transition:border-color .2s;flex:1;min-width:200px;}
+.filter-input:focus{border-color:var(--red);}
+.filter-select{background:var(--card);border:1px solid var(--border);color:var(--text);padding:9px 16px;border-radius:10px;font-family:'Sora',sans-serif;font-size:.8rem;outline:none;cursor:pointer;}
+.results-count{color:var(--muted);font-size:.78rem;padding:12px 0;}
+
+/* ===== DETAIL PAGE ===== */
+.detail-hero{background:var(--dark2);border-bottom:1px solid var(--border);padding:32px 24px;position:relative;overflow:hidden;}
+.detail-hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.18;filter:blur(2px);transform:scale(1.05);}
+.detail-inner{max-width:1000px;margin:0 auto;display:flex;gap:28px;align-items:flex-start;}
+.detail-icon{width:100px;height:100px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:3rem;flex-shrink:0;}
+.detail-info{flex:1;}
+.detail-cat{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--red);margin-bottom:6px;}
+.detail-name{font-size:1.8rem;font-weight:800;margin-bottom:8px;}
+.detail-stars{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.detail-tags{display:flex;gap:8px;flex-wrap:wrap;}
+.detail-tag{background:rgba(255,255,255,.05);border:1px solid var(--border);padding:4px 12px;border-radius:20px;font-size:.7rem;color:var(--muted);}
+.detail-content{max-width:1000px;margin:0 auto;padding:32px 24px;display:grid;grid-template-columns:1fr 300px;gap:28px;}
+.detail-section{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:18px;}
+.detail-section h3{font-size:.85rem;font-weight:700;margin-bottom:16px;color:var(--text);text-transform:uppercase;letter-spacing:1px;}
+.detail-desc{font-size:.88rem;color:var(--muted);line-height:1.7;}
+.info-row{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:.82rem;}
+.info-row:last-child{border-bottom:none;}
+.info-icon{font-size:1rem;width:20px;text-align:center;}
+.info-label{color:var(--muted);width:80px;flex-shrink:0;}
+.info-val{color:var(--text);flex:1;}
+.contact-btn{width:100%;background:var(--red);color:white;border:none;padding:12px;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:'Sora',sans-serif;margin-bottom:10px;transition:opacity .2s;}
+.contact-btn:hover{opacity:.85;}
+.back-btn{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:.78rem;cursor:pointer;transition:color .2s;margin-bottom:20px;padding:0 24px;}
+.back-btn:hover{color:var(--red);}
+
+/* ===== REGISTER PAGE ===== */
+.register-page{max-width:700px;margin:0 auto;padding:40px 24px;}
+.register-page h2{font-size:1.6rem;font-weight:800;margin-bottom:6px;}
+.register-page h2 span{color:var(--red);}
+.register-page p{color:var(--muted);font-size:.85rem;margin-bottom:32px;}
+.form-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.form-group{display:flex;flex-direction:column;gap:6px;}
+.form-group.full{grid-column:1/-1;}
+.form-label{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
+.form-input,.form-select,.form-textarea{background:var(--dark2);border:1px solid var(--border);color:var(--text);padding:11px 14px;border-radius:10px;font-family:'Sora',sans-serif;font-size:.85rem;outline:none;transition:border-color .2s;width:100%;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--red);}
+.form-textarea{resize:vertical;min-height:100px;}
+.form-submit{width:100%;background:var(--red);color:white;border:none;padding:14px;border-radius:10px;font-size:.9rem;font-weight:700;cursor:pointer;font-family:'Sora',sans-serif;margin-top:8px;transition:opacity .2s;}
+.form-submit:hover{opacity:.85;}
+.plan-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;}
+.plan-card{border:2px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;transition:all .2s;}
+.plan-card.selected{border-color:var(--red);background:rgba(232,65,42,.06);}
+.plan-card h4{font-size:.9rem;font-weight:700;margin-bottom:4px;}
+.plan-card .plan-price{font-size:1.2rem;font-weight:800;color:var(--red);}
+.plan-card .plan-period{font-size:.65rem;color:var(--muted);}
+.plan-card ul{margin-top:10px;list-style:none;}
+.plan-card ul li{font-size:.72rem;color:var(--muted);padding:3px 0;}
+.plan-card ul li::before{content:'✓ ';color:var(--green);}
+
+/* ===== ADMIN PAGE ===== */
+.admin-page{max-width:1100px;margin:0 auto;padding:32px 24px;}
+.admin-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;}
+.admin-header h2{font-size:1.3rem;font-weight:800;}
+.admin-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px;}
+.admin-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;text-align:center;}
+.admin-stat-num{font-size:1.6rem;font-weight:800;color:var(--red);}
+.admin-stat-lbl{font-size:.68rem;color:var(--muted);margin-top:2px;}
+.admin-table{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.table-header{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;padding:14px 20px;background:var(--dark2);border-bottom:1px solid var(--border);font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
+.table-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;padding:14px 20px;border-bottom:1px solid var(--border);font-size:.8rem;align-items:center;transition:background .2s;}
+.table-row:last-child{border-bottom:none;}
+.table-row:hover{background:rgba(255,255,255,.02);}
+.status-badge{padding:3px 10px;border-radius:20px;font-size:.62rem;font-weight:600;text-transform:uppercase;}
+.status-active{background:rgba(26,107,58,.2);color:#4ade80;}
+.status-pending{background:rgba(245,166,35,.15);color:var(--orange);}
+.status-expired{background:rgba(232,65,42,.15);color:var(--red);}
+.action-link{color:var(--red);font-size:.72rem;cursor:pointer;font-weight:600;}
+.admin-login{max-width:400px;margin:80px auto;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:36px;text-align:center;}
+.admin-login h3{font-size:1.2rem;font-weight:700;margin-bottom:6px;}
+.admin-login p{color:var(--muted);font-size:.8rem;margin-bottom:24px;}
+
+/* SUCCESS PAGE */
+.success-page{max-width:500px;margin:80px auto;text-align:center;padding:24px;}
+.success-icon{font-size:4rem;margin-bottom:20px;}
+.success-page h2{font-size:1.5rem;font-weight:800;margin-bottom:10px;}
+.success-page p{color:var(--muted);font-size:.88rem;line-height:1.6;margin-bottom:28px;}
+
+/* FOOTER */
+footer{background:var(--dark2);border-top:1px solid var(--border);padding:28px 24px;text-align:center;color:var(--muted);font-size:.72rem;margin-top:40px;}
+footer strong{color:var(--red);}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:white;padding:12px 24px;border-radius:12px;font-size:.82rem;font-weight:600;box-shadow:0 8px 32px rgba(0,0,0,.3);transition:transform .3s cubic-bezier(.16,1,.3,1);z-index:999;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+@media(max-width:768px){
+  .nav-links{display:none;}
+  .form-grid{grid-template-columns:1fr;}
+  .plan-cards{grid-template-columns:1fr;}
+  .admin-stats{grid-template-columns:1fr 1fr;}
+  .table-header,.table-row{grid-template-columns:2fr 1fr 1fr;}
+  .table-header span:nth-child(4),.table-header span:nth-child(5),
+  .table-row span:nth-child(4),.table-row span:nth-child(5){display:none;}
+  .detail-content{grid-template-columns:1fr;}
+  .premium-banner{flex-direction:column;}
+  .detail-inner{flex-direction:column;}
+}
+
+/* ===== PAYMENT MODAL ===== */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px;}
+.modal-overlay.open{display:flex;}
+.modal{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:24px;padding:36px;max-width:440px;width:100%;position:relative;animation:fadeUp .4s cubic-bezier(.16,1,.3,1);}
+.modal-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.08);border:none;color:#888;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.modal-close:hover{background:var(--red);color:white;}
+.modal-step{display:none;text-align:center;}
+.modal-step.active{display:block;}
+.mvola-logo{font-size:2.5rem;margin-bottom:12px;}
+.mvola-title{font-size:1.2rem;font-weight:800;margin-bottom:4px;}
+.mvola-sub{color:var(--muted);font-size:.82rem;margin-bottom:24px;}
+.qr-wrap{background:white;padding:16px;border-radius:16px;display:inline-block;margin-bottom:20px;box-shadow:0 8px 32px rgba(0,0,0,.3);}
+.mvola-amount{font-size:2rem;font-weight:800;color:#00C853;margin-bottom:4px;}
+.mvola-num{font-size:1.1rem;font-weight:700;color:var(--text);background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.2);padding:10px 20px;border-radius:10px;margin:12px auto;display:inline-block;}
+.mvola-ref{font-size:.75rem;color:var(--muted);margin-bottom:20px;}
+.step-indicator{display:flex;justify-content:center;gap:8px;margin-bottom:24px;}
+.step-dot{width:8px;height:8px;border-radius:50%;background:var(--border);}
+.step-dot.active{background:var(--red);}
+.step-dot.done{background:#00C853;}
+.mvola-steps{text-align:left;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px;}
+.mvola-step-item{display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);font-size:.8rem;}
+.mvola-step-item:last-child{border-bottom:none;padding-bottom:0;}
+.step-num{width:22px;height:22px;border-radius:50%;background:var(--red);color:white;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.confirm-input{width:100%;background:var(--dark2);border:1px solid var(--border);color:var(--text);padding:12px 16px;border-radius:10px;font-family:'Sora',sans-serif;font-size:.9rem;outline:none;margin-bottom:12px;transition:border-color .2s;text-align:center;letter-spacing:2px;font-size:1rem;}
+.confirm-input:focus{border-color:#00C853;}
+.success-anim{font-size:4rem;margin-bottom:16px;animation:bounceIn .6s cubic-bezier(.16,1,.3,1);}
+@keyframes bounceIn{from{transform:scale(0)}to{transform:scale(1)}}
+.txn-box{background:rgba(0,200,83,.08);border:1px solid rgba(0,200,83,.2);border-radius:12px;padding:16px;margin-bottom:20px;text-align:left;}
+.txn-row{display:flex;justify-content:space-between;font-size:.78rem;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.txn-row:last-child{border-bottom:none;}
+.txn-label{color:var(--muted);}
+.txn-val{color:var(--text);font-weight:600;}
+.txn-id{color:#00C853;font-family:monospace;}
+.btn-green{background:#00C853;color:white;border:none;padding:12px 24px;border-radius:10px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:'Sora',sans-serif;width:100%;transition:opacity .2s;}
+.btn-green:hover{opacity:.85;}
+.timer-bar{height:3px;background:rgba(0,200,83,.2);border-radius:2px;margin-bottom:20px;overflow:hidden;}
+.timer-fill{height:100%;background:#00C853;border-radius:2px;transition:width .1s linear;}
+.scanning-txt{color:var(--muted);font-size:.78rem;margin-top:8px;}
+
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+  // EmailJS init — Public Key
+  (function(){ emailjs.init({ publicKey: "YOUR_PUBLIC_KEY" }); })();
+</script>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-logo" onclick="showPage('home')">
+      Mada<span>Find</span>
+      <small>Annuaire Madagascar</small>
+    </div>
+    <div class="nav-links">
+      <a onclick="showPage('listings')">Entreprises</a>
+      <a onclick="showPage('register')">Ajouter mon commerce</a>
+      <a onclick="showPage('admin-login')">Admin</a>
+    </div>
+    <div class="nav-right">
+      <button class="lang-toggle" onclick="toggleLang()" id="lang-btn">🇲🇬 MG</button>
+      <button class="btn-red" onclick="showPage('register')">+ Ajouter</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== HOME PAGE ===== -->
+<div class="page active" id="page-home">
+  <div class="hero" id="hero-wrap" style="position:relative;">
+    <div id="hero-bg" style="position:absolute;inset:0;background-size:cover;background-position:center;transition:opacity 0.8s ease;z-index:0;"></div>
+    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.62) 0%,rgba(0,0,0,.52) 100%);z-index:1;pointer-events:none;"></div>
+    <div class="hero-tag">🇲🇬 N°1 Madagascar</div>
+    <h1 id="hero-title">Trouvez tout à<br><em>Madagascar</em></h1>
+    <p id="hero-sub">Restaurants, hôtels, commerces, services... Les meilleures adresses de la Grande Île.</p>
+    <div class="search-box">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="home-search" placeholder="Restaurant, hôtel, pharmacie..." onkeydown="if(event.key==='Enter')doSearch()">
+      <button class="search-btn" onclick="doSearch()">Chercher</button>
+    </div>
+    <div class="search-tags">
+      <div class="stag" onclick="filterAndGo('Restaurants')"><span class="stag-dot" style="background:#e67e22"></span>Restaurants</div>
+      <div class="stag" onclick="filterAndGo('Hôtels')"><span class="stag-dot" style="background:#8e44ad"></span>Hôtels</div>
+      <div class="stag" onclick="filterAndGo('Pharmacies')"><span class="stag-dot" style="background:#E8412A"></span>Pharmacies</div>
+      <div class="stag" onclick="filterAndGo('Taxis')"><span class="stag-dot" style="background:#f39c12"></span>Taxis</div>
+      <div class="stag" onclick="filterAndGo('Supermarchés')"><span class="stag-dot" style="background:#27ae60"></span>Supermarchés</div>
+      <div class="stag" onclick="filterAndGo('Banques')"><span class="stag-dot" style="background:#2980b9"></span>Banques</div>
+    </div>
+  </div>
+
+  <!-- Hero caption + dots -->
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px 0 6px;position:relative;z-index:1;">
+    <div id="hero-caption" style="font-size:.72rem;color:rgba(255,255,255,.75);letter-spacing:.5px;transition:opacity .4s;text-shadow:0 1px 4px rgba(0,0,0,.8);"></div>
+    <div style="display:flex;gap:6px;">
+      <span class="hero-dot dot-active" data-i="0"></span>
+      <span class="hero-dot" data-i="1"></span>
+      <span class="hero-dot" data-i="2"></span>
+      <span class="hero-dot" data-i="3"></span>
+      <span class="hero-dot" data-i="4"></span>
+      <span class="hero-dot" data-i="5"></span>
+      <span class="hero-dot" data-i="6"></span>
+      <span class="hero-dot" data-i="7"></span>
+      <span class="hero-dot" data-i="8"></span>
+      <span class="hero-dot" data-i="9"></span>
+      <span class="hero-dot" data-i="10"></span>
+      <span class="hero-dot" data-i="11"></span>
+    </div>
+  </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stats-inner">
+      <div class="stat"><div class="stat-num" id="stat-total">0</div><div class="stat-lbl">Entreprises</div></div>
+      <div class="stat"><div class="stat-num">18</div><div class="stat-lbl">Villes</div></div>
+      <div class="stat"><div class="stat-num">12</div><div class="stat-lbl">Catégories</div></div>
+      <div class="stat"><div class="stat-num">100%</div><div class="stat-lbl">Gratuit</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title"><span>●</span> Catégories</div>
+    </div>
+    <div class="cat-grid" id="home-cats"></div>
+
+    <div class="section-head" style="margin-top:10px;">
+      <div class="section-title"><span>●</span> Découvrez nos <b style="color:var(--red)">${businesses.filter(b=>b.status==='active').length}</b> établissements</div>
+      <div class="see-all" onclick="showPage('listings')">Voir tout →</div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding-bottom:32px;">
+      <button class="btn-red" onclick="showPage('listings')" style="padding:12px 28px;font-size:.85rem;">🔍 Parcourir tout</button>
+      <button class="btn-outline" onclick="showPage('register')" style="padding:12px 28px;font-size:.85rem;">+ Ajouter mon commerce</button>
+    </div>
+
+    <div class="premium-banner">
+      <div class="pb-left">
+        <h2>Inscrivez votre <span>commerce</span> sur MadaFind</h2>
+        <p>Soyez visible par des milliers de clients. Profil complet, photos, contacts.</p>
+      </div>
+      <div class="pb-price">
+        <div class="pb-amount">50 000 Ar</div>
+        <div class="pb-period">par mois seulement</div>
+        <button class="pb-btn" onclick="showPage('register')">Je m'inscris</button>
+      </div>
+    </div>
+  </div>
+
+  <footer><strong>MadaFind</strong> — L'annuaire numérique de Madagascar 🇲🇬<br><span style="margin-top:6px;display:block">© 2026 · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="54373b3a203537201439353035323d3a307a3933">[email&#160;protected]</a></span></footer>
+</div>
+
+<!-- ===== LISTINGS PAGE ===== -->
+<div class="page" id="page-listings">
+  <div class="listing-page-header">
+    <div class="listing-filters">
+      <input class="filter-input" id="filter-search" placeholder="🔍 Rechercher..." oninput="renderListings()">
+      <select class="filter-select" id="filter-cat" onchange="renderListings()">
+        <option value="">Toutes catégories</option>
+      </select>
+    </div>
+    <!-- City pill buttons -->
+    <div class="city-pills" id="city-pills">
+      <button class="city-pill active" onclick="setCity('')" id="pill-all">🇲🇬 Tout Madagascar</button>
+      <button class="city-pill" onclick="setCity('Antananarivo')" id="pill-Antananarivo">📍 Antananarivo</button>
+      <button class="city-pill" onclick="setCity('Toamasina')" id="pill-Toamasina">📍 Toamasina</button>
+      <button class="city-pill" onclick="setCity('Antsirabe')" id="pill-Antsirabe">📍 Antsirabe</button>
+      <button class="city-pill" onclick="setCity('Mahajanga')" id="pill-Mahajanga">📍 Mahajanga</button>
+      <button class="city-pill" onclick="setCity('Fianarantsoa')" id="pill-Fianarantsoa">📍 Fianarantsoa</button>
+      <button class="city-pill" onclick="setCity('Antsiranana')" id="pill-Antsiranana">📍 Diego-Suarez</button>
+      <button class="city-pill" onclick="setCity('Toliara')" id="pill-Toliara">📍 Toliara</button>
+      <button class="city-pill" onclick="setCity('Nosy Be')" id="pill-Nosy Be">📍 Nosy Be</button>
+    </div>
+    <!-- Hidden city select for JS compatibility -->
+    <select id="filter-city" style="display:none"></select>
+  </div>
+  <div class="section">
+    <div class="results-count" id="results-count"></div>
+    <div class="listings-grid" id="all-listings"></div>
+  </div>
+  <footer><strong>MadaFind</strong> — © 2026</footer>
+</div>
+
+<!-- ===== DETAIL PAGE ===== -->
+<div class="page" id="page-detail">
+  <div class="back-btn" onclick="showPage('listings')">← Retour aux résultats</div>
+  <div class="detail-hero" id="detail-hero">
+    <div class="detail-hero-bg" id="detail-hero-bg"></div>
+    <div class="detail-inner" id="detail-hero-content"></div>
+  </div>
+  <div class="detail-content" id="detail-body"></div>
+</div>
+
+<!-- ===== REGISTER PAGE ===== -->
+<div class="page" id="page-register">
+  <div class="register-page">
+    <h2>Inscrivez votre <span>commerce</span></h2>
+    <p>Remplissez ce formulaire pour apparaître sur MadaFind. Notre équipe validera votre fiche sous 24h.</p>
+
+    <div class="form-card">
+      <div style="margin-bottom:20px">
+        <div class="form-label" style="margin-bottom:10px">Choisissez votre plan</div>
+        <div class="plan-cards">
+          <div class="plan-card selected" id="plan-basic" onclick="selectPlan('basic')">
+            <h4>Basique</h4>
+            <div class="plan-price">Gratuit</div>
+            <div class="plan-period">pour toujours</div>
+            <ul>
+              <li>✅ Fiche simple</li>
+              <li>✅ Nom + adresse + téléphone</li>
+              <li>✅ 1 photo</li>
+              <li>❌ Pas de badge vérifié</li>
+              <li>❌ Position standard</li>
+              <li>❌ Pas de lien web</li>
+            </ul>
+          </div>
+          <div class="plan-card" id="plan-premium" onclick="selectPlan('premium')" style="border-color:#F5A623;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:0;right:0;background:#F5A623;color:#000;font-size:.6rem;font-weight:800;padding:3px 10px;border-radius:0 0 0 8px;">POPULAIRE</div>
+            <h4>⭐ Premium</h4>
+            <div class="plan-price">50 000 Ar</div>
+            <div class="plan-period">par mois</div>
+            <ul>
+              <li>✅ Fiche complète visible</li>
+              <li>✅ Badge ⭐ Premium + ✓ Vérifié</li>
+              <li>✅ 5 photos haute qualité</li>
+              <li>✅ 1ère position résultats</li>
+              <li>✅ Appel + WhatsApp mis en avant</li>
+              <li>✅ Lien site web affiché</li>
+              <li>✅ Horaires détaillés</li>
+              <li>✅ Carte & itinéraire intégrés</li>
+              <li>✅ Support prioritaire MadaFind</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Nom du commerce *</label>
+          <input class="form-input" id="f-name" placeholder="Ex: Restaurant Le Romazava">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Catégorie *</label>
+          <select class="form-select" id="f-cat">
+            <option value="">Choisir...</option>
+            <option>Restaurants</option><option>Hôtels</option><option>Supermarchés</option>
+            <option>Pharmacies</option><option>Banques</option><option>Taxis</option>
+            <option>Beauté & Spa</option><option>Santé</option><option>Éducation</option>
+            <option>Immobilier</option><option>Garage & Auto</option><option>Autre</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ville *</label>
+          <select class="form-select" id="f-city">
+            <option value="">Choisir...</option>
+            <option>Antananarivo</option><option>Toamasina</option><option>Antsirabe</option>
+            <option>Mahajanga</option><option>Fianarantsoa</option><option>Toliara</option>
+            <option>Antsiranana</option><option>Nosy Be</option><option>Ambositra</option>
+            <option>Morondava</option><option>Autre</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Téléphone *</label>
+          <input class="form-input" id="f-phone" placeholder="Ex: +261 34 00 000 00">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Adresse complète *</label>
+          <input class="form-input" id="f-address" placeholder="Ex: Lot II K 23, Antananarivo">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Description *</label>
+          <textarea class="form-textarea" id="f-desc" placeholder="Décrivez votre commerce, vos services, vos spécialités..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" id="f-email" placeholder="contact@moncommerce.mg">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Site web</label>
+          <input class="form-input" id="f-web" placeholder="www.moncommerce.mg">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Horaires</label>
+          <input class="form-input" id="f-hours" placeholder="Ex: Lun-Sam 8h-18h">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Emoji icône</label>
+          <input class="form-input" id="f-emoji" placeholder="Ex: 🍽️ 🏨 💊">
+        </div>
+      </div>
+
+      <!-- PHOTOS -->
+      <div style="margin-top:20px;">
+        <label class="form-label">📷 Photos de votre commerce</label>
+        <div id="photo-upload-area" style="border:2px dashed #2a2a2a;border-radius:14px;padding:20px;text-align:center;margin-top:8px;cursor:pointer;transition:border-color .2s;" onclick="document.getElementById('f-photos').click()" onmouseover="this.style.borderColor='#E8412A'" onmouseout="this.style.borderColor='#2a2a2a'">
+          <div style="font-size:2rem;margin-bottom:8px;">📸</div>
+          <div style="font-weight:600;font-size:.88rem;margin-bottom:4px;">Cliquez pour ajouter des photos</div>
+          <div id="photo-limit-txt" style="font-size:.72rem;color:#888;">Plan Gratuit : 1 photo maximum</div>
+        </div>
+        <input type="file" id="f-photos" accept="image/*" multiple style="display:none;" onchange="handlePhotos(this)">
+        <div id="photo-preview" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;"></div>
+      </div>
+
+      <button class="form-submit" onclick="submitForm()">✅ Soumettre mon inscription</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SUCCESS PAGE ===== -->
+<div class="page" id="page-success">
+  <div class="success-page">
+    <div class="success-icon">🎉</div>
+    <h2>Inscription envoyée !</h2>
+    <p>Votre commerce a été soumis avec succès. Notre équipe validera votre fiche sous 24h. Vous recevrez une confirmation par email.</p>
+    <button class="btn-red" onclick="showPage('home')">Retour à l'accueil</button>
+  </div>
+</div>
+
+<!-- ===== ADMIN LOGIN ===== -->
+<div class="page" id="page-admin-login">
+  <div class="admin-login">
+    <div style="font-size:2rem;margin-bottom:12px">🔐</div>
+    <h3>Espace Admin</h3>
+    <p>Connectez-vous pour gérer les inscriptions</p>
+    <div class="form-group" style="margin-bottom:12px">
+      <input class="form-input" type="password" id="admin-pwd" placeholder="Mot de passe..." onkeydown="if(event.key==='Enter')adminLogin()">
+    </div>
+    <button class="btn-red" style="width:100%" onclick="adminLogin()">Se connecter</button>
+    <div style="color:var(--muted);font-size:.7rem;margin-top:12px">Mot de passe : madafind2026</div>
+  </div>
+</div>
+
+<!-- ===== ADMIN PAGE ===== -->
+<div class="page" id="page-admin">
+  <div class="admin-page">
+    <div class="admin-header">
+      <h2>🛠️ Admin MadaFind</h2>
+      <button class="btn-outline" onclick="showPage('home')">← Retour site</button>
+    </div>
+    <div class="admin-stats">
+      <div class="admin-stat"><div class="admin-stat-num" id="adm-total">0</div><div class="admin-stat-lbl">Total</div></div>
+      <div class="admin-stat"><div class="admin-stat-num" id="adm-active">0</div><div class="admin-stat-lbl">Actifs</div></div>
+      <div class="admin-stat"><div class="admin-stat-num" id="adm-pending">0</div><div class="admin-stat-lbl">En attente</div></div>
+      <div class="admin-stat"><div class="admin-stat-num" id="adm-revenue">0</div><div class="admin-stat-lbl">Ar/mois</div></div>
+    </div>
+    <div class="admin-table">
+      <div class="table-header">
+        <span>Nom</span><span>Catégorie</span><span>Ville</span><span>Statut</span><span>Action</span>
+      </div>
+      <div id="admin-rows"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// ===== DATA =====
+const CATS = [
+  {name:'Restaurants', icon:'restaurant', img:'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=200&fit=crop', color:'#e67e22', count:0},
+  {name:'Hôtels',      icon:'hotel',      img:'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=400&h=200&fit=crop', color:'#8e44ad', count:0},
+  {name:'Supermarchés',icon:'market',     img:'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&h=200&fit=crop', color:'#27ae60', count:0},
+  {name:'Pharmacies',  icon:'pharmacy',   img:'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&h=200&fit=crop', color:'#E8412A', count:0},
+  {name:'Banques',     icon:'bank',       img:'https://images.unsplash.com/photo-1501167786227-4cba60f6d58f?w=400&h=200&fit=crop', color:'#2980b9', count:0},
+  {name:'Taxis',       icon:'taxi',       img:'https://images.unsplash.com/photo-1597239450996-ea7c2c564412?w=400&h=200&fit=crop', color:'#f39c12', count:0},
+  {name:'Beauté & Spa',icon:'beauty',     img:'https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=400&h=200&fit=crop', color:'#e91e63', count:0},
+  {name:'Santé',       icon:'health',     img:'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=400&h=200&fit=crop', color:'#16a085', count:0},
+  {name:'Éducation',   icon:'education',  img:'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=400&h=200&fit=crop', color:'#2c3e50', count:0},
+  {name:'Immobilier',  icon:'realestate', img:'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=200&fit=crop', color:'#795548', count:0},
+  {name:'Garage & Auto',icon:'garage',   img:'https://images.unsplash.com/photo-1487754180451-c456f719a1fc?w=400&h=200&fit=crop', color:'#37474f', count:0},
+  {name:'Autre',       icon:'other',      img:'https://images.unsplash.com/photo-1590928240229-c505fe88faff?w=400&h=200&fit=crop', color:'#607d8b', count:0},
+];
+
+// SVG icons per category key
+const CAT_SVG = {
+  restaurant: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>',
+  hotel:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14"/><path d="M2 22h20"/><path d="M9 22V12h6v10"/><rect x="9" y="6" width="6" height="4" rx="1"/></svg>',
+  market:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>',
+  pharmacy:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/><rect x="5" y="5" width="14" height="14" rx="2"/></svg>',
+  bank:        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22h18M6 18V9m4 9V9m4 9V9m4 9V9M3 9l9-7 9 7"/></svg>',
+  taxi:        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H19a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2"/><circle cx="8" cy="17" r="2"/><circle cx="16" cy="17" r="2"/><path d="M9 11h6"/></svg>',
+  beauty:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 18V8"/><path d="M8 12s1-2 4-2 4 2 4 2"/></svg>',
+  health:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>',
+  education:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
+  realestate:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+  garage:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><path d="M4 10L6 4h12l2 6"/><path d="M2 10h20v8H2z"/></svg>',
+  other:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+};
+
+// Données initiales
+let businesses = [
+  {
+    "rating": 4.9,
+    "reviews": 128,
+    "id": 1,
+    "name": "Le Romazava",
+    "cat": "Restaurants",
+    "city": "Antananarivo",
+    "phone": "+261 34 11 111 11",
+    "address": "Lot II K 23, Analakely, Antananarivo",
+    "desc": "Cuisine malgache traditionnelle au cœur d'Antananarivo. Spécialités : romazava, ravitoto, vary amin'anana. Ambiance chaleureuse et authentique.",
+    "email": "romazava@email.com",
+    "web": "",
+    "hours": "Lun-Dim 11h-22h",
+    "emoji": "🍛",
+    "status": "active",
+    "plan": "premium",
+    "badge": "premium"
+  },
+  {
+    "rating": 4.7,
+    "reviews": 89,
+    "id": 2,
+    "name": "Hôtel Colbert",
+    "cat": "Hôtels",
+    "city": "Antananarivo",
+    "phone": "+261 20 22 202 02",
+    "address": "Rue du Général Ramanantsoa, Antananarivo",
+    "desc": "Hôtel 4 étoiles avec piscine, restaurant gastronomique et vue panoramique sur la capitale malgache.",
+    "email": "colbert@hotel.mg",
+    "web": "www.hotelcolbert.mg",
+    "hours": "24h/24",
+    "emoji": "🏨",
+    "status": "active",
+    "plan": "premium",
+    "badge": "verified"
+  },
+  {
+    "rating": 4.8,
+    "reviews": 204,
+    "id": 3,
+    "name": "Sakamanga",
+    "cat": "Restaurants",
+    "city": "Antananarivo",
+    "phone": "+261 34 22 222 22",
+    "address": "Rue Andriantsimarofy, Antananarivo",
+    "desc": "Restaurant & bar incontournable à Tana. Ambiance chaleureuse, cuisine créole et internationale, concerts live.",
+    "email": "sakamanga@email.com",
+    "web": "www.sakamanga.com",
+    "hours": "Lun-Dim 10h-23h",
+    "emoji": "🥘",
+    "status": "active",
+    "plan": "premium",
+    "badge": "new"
+  },
+  {
+    "rating": 5.0,
+    "reviews": 67,
+    "id": 4,
+    "name": "Tsara Beach Resort",
+    "cat": "Hôtels",
+    "city": "Nosy Be",
+    "phone": "+261 32 33 333 33",
+    "address": "Plage d'Ambatoloaka, Nosy Be",
+    "desc": "Resort 5 étoiles sur la plage de Nosy Be. Bungalows sur pilotis, plongée sous-marine, spa et cuisine de mer.",
+    "email": "tsara@resort.mg",
+    "web": "www.tsararesort.mg",
+    "hours": "24h/24",
+    "emoji": "🌊",
+    "status": "active",
+    "plan": "premium",
+    "badge": "premium"
+  },
+  {
+    "rating": 4.6,
+    "reviews": 45,
+    "id": 5,
+    "name": "Pharmacie Analakely",
+    "cat": "Pharmacies",
+    "city": "Antananarivo",
+    "phone": "+261 20 22 300 00",
+    "address": "Place de l'Indépendance, Analakely",
+    "desc": "Pharmacie centrale ouverte 24h/24. Médicaments, parapharmacie, conseils santé personnalisés.",
+    "email": "",
+    "web": "",
+    "hours": "24h/24",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": "verified",
+    "photo": "https://groupe-metropole.mg/wp-content/uploads/2017/09/7219-600x400.jpg"
+  },
+  {
+    "rating": 4.5,
+    "reviews": 312,
+    "id": 6,
+    "name": "Score Ivandry",
+    "cat": "Supermarchés",
+    "city": "Antananarivo",
+    "phone": "+261 20 22 400 00",
+    "address": "Centre commercial Ivandry, Antananarivo",
+    "desc": "Grand supermarché avec produits locaux et importés. Boulangerie fraîche, boucherie, épicerie, électroménager.",
+    "email": "score@ivandry.mg",
+    "web": "",
+    "hours": "Lun-Sam 8h-20h, Dim 9h-18h",
+    "emoji": "🛒",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.3,
+    "reviews": 78,
+    "id": 7,
+    "name": "BNI Madagascar",
+    "cat": "Banques",
+    "city": "Antananarivo",
+    "phone": "+261 20 22 500 00",
+    "address": "74 Rue du 26 Juin 1960, Antananarivo",
+    "desc": "Banque nationale avec services complets : comptes courants, épargne, crédits, transferts internationaux.",
+    "email": "contact@bni.mg",
+    "web": "www.bni.mg",
+    "hours": "Lun-Ven 8h-16h",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "premium",
+    "badge": "verified",
+    "photo": "https://www.bni.mg/themes/custom/bni/assets/img/bni-main-logo.svg",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 4.7,
+    "reviews": 156,
+    "id": 8,
+    "name": "Salon Mirana",
+    "cat": "Beauté & Spa",
+    "city": "Antananarivo",
+    "phone": "+261 34 44 444 44",
+    "address": "Lot III B 12, Tsaralalana, Antananarivo",
+    "desc": "Salon de coiffure et spa complet. Coiffure, manucure, pédicure, soins du visage et massages relaxants.",
+    "email": "mirana@salon.mg",
+    "web": "",
+    "hours": "Mar-Sam 9h-18h",
+    "emoji": "💅",
+    "status": "pending",
+    "plan": "basic",
+    "badge": "new"
+  },
+  {
+    "rating": 4.4,
+    "reviews": 34,
+    "id": 9,
+    "name": "Taxi Be Mahajanga",
+    "cat": "Taxis",
+    "city": "Mahajanga",
+    "phone": "+261 32 55 555 55",
+    "address": "Gare routière de Mahajanga",
+    "desc": "Service de taxi fiable à Mahajanga. Transferts aéroport, excursions touristiques, transport quotidien.",
+    "email": "",
+    "web": "",
+    "hours": "6h-22h",
+    "emoji": "🚕",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.4,
+    "reviews": 52,
+    "id": 10,
+    "name": "Hôtel Joffre",
+    "cat": "Hôtels",
+    "city": "Toamasina",
+    "phone": "+261 20 53 300 00",
+    "address": "Bvd Joffre, Toamasina",
+    "desc": "Hôtel historique de Toamasina. Chambres confortables, restaurant, proche du port et des plages.",
+    "email": "joffre@hotel.mg",
+    "web": "",
+    "hours": "24h/24",
+    "emoji": "🏩",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.5,
+    "reviews": 98,
+    "id": 46,
+    "name": "Pharmacie Hasimbola",
+    "cat": "Pharmacies",
+    "city": "Antananarivo",
+    "phone": "034 20 259 50",
+    "address": "Centre commercial ZOOM, Ankorondrano, Antananarivo 101",
+    "desc": "Pharmacie Hasimbola au centre commercial ZOOM Ankorondrano. Médicaments, parapharmacie, conseils santé. Ouverte du lundi au samedi 8h30-19h, dimanche 8h30-12h30.",
+    "email": "pharm.hasimbola@moov.mg",
+    "web": "pharmacie-hasimbola.mg",
+    "hours": "Lun-Sam 8h30-19h · Dim 8h30-12h30",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": "verified",
+    "photo": "https://pharmacie-hasimbola.mg/wp-content/uploads/2020/07/Officine-1200x800.jpg"
+  },
+  {
+    "rating": 4.2,
+    "reviews": 56,
+    "id": 47,
+    "name": "Pharmacie Hasin'ny Aina",
+    "cat": "Pharmacies",
+    "city": "Antananarivo",
+    "phone": "034 99 776 21",
+    "address": "Mandroseza, Antananarivo",
+    "desc": "Pharmacie Hasin'ny Aina à Mandroseza. Ouverte 24h/24 et 7j/7 pour les urgences médicales.",
+    "email": "",
+    "web": "",
+    "hours": "24h/24 — 7j/7",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.0,
+    "reviews": 31,
+    "id": 48,
+    "name": "Pharmacie Ankadindratombo",
+    "cat": "Pharmacies",
+    "city": "Antananarivo",
+    "phone": "034 02 588 02",
+    "address": "Ankadindratombo, Antananarivo",
+    "desc": "Pharmacie de garde Ankadindratombo. Ouverte 24h/24 toute l'année.",
+    "email": "",
+    "web": "",
+    "hours": "24h/24 — 7j/7",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.1,
+    "reviews": 44,
+    "id": 49,
+    "name": "Pharmacie Grazia",
+    "cat": "Pharmacies",
+    "city": "Antananarivo",
+    "phone": "034 67 733 62",
+    "address": "Itaosy, Antananarivo Atsimondrano",
+    "desc": "Pharmacie Grazia à Itaosy. Service 24h/24 7j/7, médicaments génériques et de marque.",
+    "email": "",
+    "web": "",
+    "hours": "24h/24 — 7j/7",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.3,
+    "reviews": 67,
+    "id": 50,
+    "name": "Pharmacie Hanitra",
+    "cat": "Pharmacies",
+    "city": "Antananarivo",
+    "phone": "020 79 312 81",
+    "address": "Ankorahotra, BP 244, Route circulaire, Antananarivo",
+    "desc": "Pharmacie Hanitra à Ankorahotra. Pharmacie de garde régulière. Lun-Ven 7h30-19h, Sam 7h30-14h.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Ven 7h30-19h · Sam 7h30-14h",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.4,
+    "reviews": 82,
+    "id": 51,
+    "name": "Pharmacie Isoraka",
+    "cat": "Pharmacies",
+    "city": "Antananarivo",
+    "phone": "020 22 285 04",
+    "address": "Avenue du Général Ramanantsoa, Isoraka, face Église Ekar Ambatoniloha, Antananarivo",
+    "desc": "Pharmacie Isoraka du Groupe Métropole. Spécialiste homéopathie, orthopédie et préparations magistrales. Lun-Ven 8h-18h, Sam 8h-12h.",
+    "email": "",
+    "web": "groupe-metropole.mg",
+    "hours": "Lun-Ven 8h-18h · Sam 8h-12h",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": "verified",
+    "photo": "https://groupe-metropole.mg/wp-content/uploads/2017/09/7149-670x400.jpg"
+  },
+  {
+    "rating": 4.3,
+    "reviews": 71,
+    "id": 52,
+    "name": "Pharmacie de la Digue",
+    "cat": "Pharmacies",
+    "city": "Antananarivo",
+    "phone": "020 22 006 78",
+    "address": "Score Digue, PK 8.5, Route d'Ivato, Antananarivo",
+    "desc": "Pharmacie de la Digue, Groupe Métropole. Ouverte 7j/7 dont dimanche matin. Lun-Sam 8h-18h30, Dim 8h-12h.",
+    "email": "",
+    "web": "groupe-metropole.mg",
+    "hours": "Lun-Sam 8h-18h30 · Dim 8h-12h",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://groupe-metropole.mg/wp-content/uploads/2017/09/7682.jpg"
+  },
+  {
+    "rating": 4.2,
+    "reviews": 59,
+    "id": 53,
+    "name": "Pharmacie Kanacia",
+    "cat": "Pharmacies",
+    "city": "Antananarivo",
+    "phone": "020 22 575 83",
+    "address": "Galerie commerciale SMART, Zone Galilée, Tanjombato, Antananarivo",
+    "desc": "Pharmacie Kanacia du Groupe Métropole à Tanjombato. Lun-Ven 8h-12h et 14h-19h, Sam 8h-12h.",
+    "email": "",
+    "web": "groupe-metropole.mg",
+    "hours": "Lun-Ven 8h-12h/14h-19h · Sam 8h-12h",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://groupe-metropole.mg/wp-content/uploads/2022/10/Pharmacie-kanacia-site-1-533x400.jpg"
+  },
+  {
+    "rating": 4.5,
+    "reviews": 103,
+    "id": 54,
+    "name": "Pharmacie Analavory",
+    "cat": "Pharmacies",
+    "city": "Antananarivo",
+    "phone": "020 22 329 85",
+    "address": "Soarano, près BNI, Antananarivo",
+    "desc": "Pharmacie Analavory du Groupe Métropole. Ouverte 24h/24 et 7j/7 — la seule du groupe ouverte en permanence.",
+    "email": "",
+    "web": "groupe-metropole.mg",
+    "hours": "24h/24 — 7j/7",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": "verified",
+    "photo": "https://groupe-metropole.mg/wp-content/uploads/2021/10/horaires-644x400.jpg"
+  },
+  {
+    "rating": 4.0,
+    "reviews": 38,
+    "id": 55,
+    "name": "Pharmacie Toky",
+    "cat": "Pharmacies",
+    "city": "Antananarivo",
+    "phone": "034 11 264 41",
+    "address": "Andrefan'Ambohijanahary, Antananarivo",
+    "desc": "Pharmacie Toky. Pharmacie de garde régulière à Andrefan'Ambohijanahary.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Sam 7h30-19h",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.1,
+    "reviews": 42,
+    "id": 56,
+    "name": "Pharmacie Mamy",
+    "cat": "Pharmacies",
+    "city": "Antananarivo",
+    "phone": "020 22 318 21",
+    "address": "67HA Nord Est, Antananarivo",
+    "desc": "Pharmacie Mamy au quartier 67 Hectares. Médicaments, parapharmacie, garde hebdomadaire.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Sam 7h-19h",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.2,
+    "reviews": 49,
+    "id": 57,
+    "name": "Pharmacie Soandry",
+    "cat": "Pharmacies",
+    "city": "Antananarivo",
+    "phone": "020 76 228 37",
+    "address": "Behoririka, près de Luxor, Antananarivo",
+    "desc": "Pharmacie Soandry à Behoririka. Pharmacie de garde régulière, ouverte weekends et jours fériés.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Dim 7h-20h",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.1,
+    "reviews": 36,
+    "id": 58,
+    "name": "Pharmacie Nouvelle",
+    "cat": "Pharmacies",
+    "city": "Antananarivo",
+    "phone": "020 76 370 03",
+    "address": "Rue Indira Gandhi, Tsaralalana, Antananarivo",
+    "desc": "Pharmacie Nouvelle à Tsaralalana. Pharmacie de garde, large stock, service rapide.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Sam 7h-18h",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.0,
+    "reviews": 33,
+    "id": 59,
+    "name": "Pharmacie Andohatapenaka",
+    "cat": "Pharmacies",
+    "city": "Antananarivo",
+    "phone": "034 02 670 70",
+    "address": "67ha Sud, Route FDC, près station Galana, Antananarivo",
+    "desc": "Pharmacie Andohatapenaka. Pharmacie de garde dans le quartier 67 Hectares Sud.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Sam 7h-19h",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.0,
+    "reviews": 29,
+    "id": 60,
+    "name": "Pharmacie Mahavoky",
+    "cat": "Pharmacies",
+    "city": "Antananarivo",
+    "phone": "034 89 056 09",
+    "address": "Mahavoky, Andravoahangy, Antananarivo",
+    "desc": "Pharmacie Mahavoky à Andravoahangy. Garde hebdomadaire, médicaments génériques et spécialités.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Sam 7h-18h30",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.1,
+    "reviews": 31,
+    "id": 61,
+    "name": "Pharmacie du Masay",
+    "cat": "Pharmacies",
+    "city": "Antananarivo",
+    "phone": "038 20 000 47",
+    "address": "Andranobevava vers Analamahitsy, entre BOA et Glad Touch, Antananarivo",
+    "desc": "Pharmacie du Masay à Analamahitsy. Pharmacie de garde, accessible 7j/7.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Dim 7h-20h",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.2,
+    "reviews": 47,
+    "id": 62,
+    "name": "Pharmacie d'Anosizato",
+    "cat": "Pharmacies",
+    "city": "Antananarivo",
+    "phone": "020 22 631 43",
+    "address": "Lot AZ 83 AII, Anosizato Andrefana, Antananarivo",
+    "desc": "Pharmacie d'Anosizato. Service 24h/24 en périphérie d'Antananarivo.",
+    "email": "",
+    "web": "",
+    "hours": "24h/24 — 7j/7",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.0,
+    "reviews": 28,
+    "id": 63,
+    "name": "Pharmacie d'Ambanidia",
+    "cat": "Pharmacies",
+    "city": "Antananarivo",
+    "phone": "020 22 255 50",
+    "address": "Lot VC 44 bis, Ambanidia, Antananarivo",
+    "desc": "Pharmacie d'Ambanidia. Service soignant dans le quartier résidentiel d'Ambanidia.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Sam 7h30-18h",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.1,
+    "reviews": 43,
+    "id": 64,
+    "name": "Pharmacie d'Ankadifotsy",
+    "cat": "Pharmacies",
+    "city": "Antananarivo",
+    "phone": "020 22 222 07",
+    "address": "50, Avenue Maréchal Joffre, Ankadifotsy, Antananarivo",
+    "desc": "Pharmacie d'Ankadifotsy. Service de qualité dans le quartier d'Ankadifotsy.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Sam 7h30-18h30",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.0,
+    "reviews": 35,
+    "id": 65,
+    "name": "Pharmacie de Mahamasina",
+    "cat": "Pharmacies",
+    "city": "Antananarivo",
+    "phone": "032 02 083 32",
+    "address": "Lot III F 5 Bis, Mahamasina, Antananarivo",
+    "desc": "Pharmacie de Mahamasina. Idéalement située près du stade de Mahamasina.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Sam 7h30-18h",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.3,
+    "reviews": 62,
+    "id": 66,
+    "name": "Pharmacie Horizon",
+    "cat": "Pharmacies",
+    "city": "Antananarivo",
+    "phone": "020 22 219 50",
+    "address": "Immeuble Ivandry, Ivandry, Antananarivo",
+    "desc": "Pharmacie Horizon à Ivandry. Dans le quartier des affaires, proche des ambassades.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Sam 7h30-18h30",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.2,
+    "reviews": 54,
+    "id": 67,
+    "name": "Pharmacie Principale Ivandry",
+    "cat": "Pharmacies",
+    "city": "Antananarivo",
+    "phone": "020 22 439 15",
+    "address": "Route des Hydrocarbures, Ivandry, Antananarivo",
+    "desc": "Pharmacie Principale Ivandry. Grande pharmacie bien approvisionnée dans le quartier affaires.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Sam 7h-18h30",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 3.9,
+    "reviews": 24,
+    "id": 68,
+    "name": "Pharmacie Avaradoha",
+    "cat": "Pharmacies",
+    "city": "Antananarivo",
+    "phone": "020 22 344 94",
+    "address": "Lot II P 67 Ter, Ambodimanga Be, Avaradoha, Antananarivo",
+    "desc": "Pharmacie Avaradoha. Médicaments, parapharmacie, service de proximité.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Sam 7h30-18h",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.3,
+    "reviews": 58,
+    "id": 69,
+    "name": "Pharmacie Bazar Be Toamasina",
+    "cat": "Pharmacies",
+    "city": "Toamasina",
+    "phone": "032 12 101 13",
+    "address": "Bazar Be, Toamasina 501",
+    "desc": "Pharmacie Bazar Be, Groupe Métropole à Toamasina. Lun-Ven 7h30-12h30 et 14h30-18h30, Sam 7h30-12h30.",
+    "email": "",
+    "web": "groupe-metropole.mg",
+    "hours": "Lun-Ven 7h30-12h30/14h30-18h30",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://groupe-metropole.mg/wp-content/uploads/2022/10/bazar-Be-site-543x400.png"
+  },
+  {
+    "rating": 4.1,
+    "reviews": 47,
+    "id": 70,
+    "name": "Pharmacie Centrale Toamasina",
+    "cat": "Pharmacies",
+    "city": "Toamasina",
+    "phone": "034 90 335 81",
+    "address": "Centre-ville, Toamasina 501",
+    "desc": "Pharmacie Centrale de Toamasina. Médicaments, parapharmacie, service rapide.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Sam 7h30-18h",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.0,
+    "reviews": 39,
+    "id": 71,
+    "name": "Pharmacie Tsarasandry",
+    "cat": "Pharmacies",
+    "city": "Toamasina",
+    "phone": "020 53 336 40",
+    "address": "Tsarasandry, Toamasina 501",
+    "desc": "Pharmacie Tsarasandry à Toamasina. Large gamme de médicaments.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Sam 7h30-18h",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.0,
+    "reviews": 34,
+    "id": 72,
+    "name": "Pharmacie Antarandolo",
+    "cat": "Pharmacies",
+    "city": "Fianarantsoa",
+    "phone": "020 75 516 75",
+    "address": "Antarandolo, Fianarantsoa 301",
+    "desc": "Pharmacie d'Antarandolo à Fianarantsoa. Principal point de médicaments dans la ville universitaire.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Sam 7h30-18h",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.1,
+    "reviews": 29,
+    "id": 73,
+    "name": "Pharmacie Endor Fort-Dauphin",
+    "cat": "Pharmacies",
+    "city": "Toliara",
+    "phone": "032 12 222 16",
+    "address": "Fort-Dauphin (Tôlanaro), Toliara",
+    "desc": "Pharmacie Endor à Fort-Dauphin. Grande pharmacie de la région Anosy, pharmacie de garde.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Sam 7h30-18h · Garde hebdo",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 3.9,
+    "reviews": 22,
+    "id": 74,
+    "name": "Pharmacie Antsohihy",
+    "cat": "Pharmacies",
+    "city": "Mahajanga",
+    "phone": "034 08 925 66",
+    "address": "Antsohihy, Sofia, Mahajanga",
+    "desc": "Pharmacie d'Antsohihy dans la région Sofia. Médicaments essentiels.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Sam 7h30-18h",
+    "emoji": "💊",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 3.8,
+    "reviews": 234,
+    "id": 75,
+    "name": "CHU HJRA",
+    "cat": "Santé",
+    "city": "Antananarivo",
+    "phone": "020 22 279 79",
+    "address": "Ampefiloha, RN1, BP 4150, Antananarivo 101",
+    "desc": "Centre Hospitalier Universitaire Joseph Ravoahangy Andrianavalona — le plus grand hôpital public de Madagascar. Urgences 24h/24, chirurgie, maternité, soins spécialisés toutes disciplines.",
+    "email": "hjra@moov.mg",
+    "web": "",
+    "hours": "24h/24 — 7j/7",
+    "emoji": "🏥",
+    "status": "active",
+    "plan": "basic",
+    "badge": "verified"
+  },
+  {
+    "rating": 4.0,
+    "reviews": 176,
+    "id": 76,
+    "name": "Hôpital de Soavinandriana (HOMI)",
+    "cat": "Santé",
+    "city": "Antananarivo",
+    "phone": "020 23 397 51",
+    "address": "BP 6 bis, Rue Dr Moss, Soavinandriana, Antananarivo 101",
+    "desc": "Centre Hospitalier de Soavinandriana — le mieux équipé de la capitale. Chirurgie, urgences, soins généraux, maternité.",
+    "email": "cenhosoa@moov.mg",
+    "web": "",
+    "hours": "24h/24 — 7j/7",
+    "emoji": "🏥",
+    "status": "active",
+    "plan": "basic",
+    "badge": "verified"
+  },
+  {
+    "rating": 3.7,
+    "reviews": 145,
+    "id": 77,
+    "name": "Hôpital Général de Befelatanana",
+    "cat": "Santé",
+    "city": "Antananarivo",
+    "phone": "020 22 205 06",
+    "address": "Ambohidahy, Antananarivo 101",
+    "desc": "Hôpital général public de Befelatanana. Soins polyvalents, consultations externes, hospitalisations, maternité.",
+    "email": "",
+    "web": "",
+    "hours": "24h/24 — 7j/7",
+    "emoji": "🏥",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 3.9,
+    "reviews": 112,
+    "id": 78,
+    "name": "Hôpital des Enfants Ambohimiandra",
+    "cat": "Santé",
+    "city": "Antananarivo",
+    "phone": "020 22 408 17",
+    "address": "Route vers Mahazoarivo, Ambohimiandra, Antananarivo 101",
+    "desc": "Hôpital pédiatrique spécialisé. Consultations pédiatriques, urgences enfants, hospitalisations.",
+    "email": "",
+    "web": "",
+    "hours": "24h/24 — 7j/7",
+    "emoji": "🏥",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.1,
+    "reviews": 134,
+    "id": 79,
+    "name": "Groupe Hospitalier Mère Enfant",
+    "cat": "Santé",
+    "city": "Antananarivo",
+    "phone": "020 22 611 93",
+    "address": "Rue Patrice Lumumba, Tsaralalàna, Antananarivo 101",
+    "desc": "Groupe Hospitalier Mère Enfant — spécialisé en maternité, gynécologie et pédiatrie.",
+    "email": "",
+    "web": "",
+    "hours": "24h/24 — 7j/7",
+    "emoji": "🏥",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.4,
+    "reviews": 198,
+    "id": 80,
+    "name": "Polyclinique d'Ilafy",
+    "cat": "Santé",
+    "city": "Antananarivo",
+    "phone": "020 22 493 72",
+    "address": "Andafiavaratra Ambohitrarahaba, BP 8632, Antananarivo",
+    "desc": "Polyclinique et maternité d'Ilafy. Clinique privée de référence, médecine générale, chirurgie, maternité, radiologie.",
+    "email": "",
+    "web": "",
+    "hours": "24h/24 — 7j/7",
+    "emoji": "🏥",
+    "status": "active",
+    "plan": "basic",
+    "badge": "verified"
+  },
+  {
+    "rating": 4.3,
+    "reviews": 156,
+    "id": 81,
+    "name": "Clinique Saint-François d'Assise",
+    "cat": "Santé",
+    "city": "Antananarivo",
+    "phone": "020 22 232 89",
+    "address": "Ankadifotsy, Antananarivo",
+    "desc": "Clinique et maternité Saint-François d'Assise. Établissement catholique de référence. Médecine, chirurgie, maternité.",
+    "email": "",
+    "web": "",
+    "hours": "24h/24 — 7j/7",
+    "emoji": "🏥",
+    "status": "active",
+    "plan": "basic",
+    "badge": "verified"
+  },
+  {
+    "rating": 4.2,
+    "reviews": 143,
+    "id": 82,
+    "name": "Clinique Saint-Paul",
+    "cat": "Santé",
+    "city": "Antananarivo",
+    "phone": "020 22 408 90",
+    "address": "Ambatoroka, Antananarivo",
+    "desc": "Clinique Saint-Paul à Ambatoroka. Soins médicaux et chirurgicaux, consultations spécialisées.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Sam 7h-17h · Urgences 24h/24",
+    "emoji": "🏥",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.0,
+    "reviews": 98,
+    "id": 83,
+    "name": "Clinique d'Anosibe",
+    "cat": "Santé",
+    "city": "Antananarivo",
+    "phone": "020 22 349 58",
+    "address": "Immeuble Ostie, Anosibe, Antananarivo",
+    "desc": "Clinique et maternité d'Anosibe. Services médicaux, chirurgie ambulatoire, consultations.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Sam 7h-17h · Urgences 24h/24",
+    "emoji": "🏥",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.6,
+    "reviews": 312,
+    "id": 84,
+    "name": "Espace Médical Ambodivona",
+    "cat": "Santé",
+    "city": "Antananarivo",
+    "phone": "034 02 088 16",
+    "address": "Près Tana Water Front, Ambodivona, Antananarivo 101",
+    "desc": "Clinique d'urgence 24h/24 et centre d'évacuation sanitaire. Médecine générale, analyses, échographie, radiologie, dentisterie. Présent aussi à Diego, Nosy Be, Antsirabe, Mahajanga, Toamasina.",
+    "email": "esmed@moov.mg",
+    "web": "espacemedical.mg",
+    "hours": "24h/24 — 7j/7",
+    "emoji": "🚑",
+    "status": "active",
+    "plan": "basic",
+    "badge": "verified",
+    "photo": "https://espacemedical.mg/wp-content/uploads/2022/01/Espace-Medical-Ambodivona.jpg"
+  },
+  {
+    "rating": 4.5,
+    "reviews": 187,
+    "id": 85,
+    "name": "Espace Médical Ankadivato",
+    "cat": "Santé",
+    "city": "Antananarivo",
+    "phone": "020 22 625 66",
+    "address": "Ankadivato, Antananarivo 101",
+    "desc": "Espace Médical Ankadivato — urgences, consultations spécialisées, analyses biologiques.",
+    "email": "",
+    "web": "espacemedical.mg",
+    "hours": "24h/24 — 7j/7",
+    "emoji": "🚑",
+    "status": "active",
+    "plan": "basic",
+    "badge": "verified",
+    "photo": "https://espacemedical.mg/wp-content/uploads/2022/01/Espace-Medical-Ankadivato.jpg"
+  },
+  {
+    "rating": 4.3,
+    "reviews": 167,
+    "id": 86,
+    "name": "Clinique Médico-Chirurgicale Tanjombato",
+    "cat": "Santé",
+    "city": "Antananarivo",
+    "phone": "020 22 479 79",
+    "address": "Andafiatsimo, Tanjombato, Antananarivo",
+    "desc": "Clinique médico-chirurgicale privée de Tanjombato. Chirurgie, urgences, consultations, imagerie médicale.",
+    "email": "",
+    "web": "",
+    "hours": "24h/24 — 7j/7",
+    "emoji": "🏥",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.1,
+    "reviews": 89,
+    "id": 87,
+    "name": "Clinique Adventiste Soamanandrariny",
+    "cat": "Santé",
+    "city": "Antananarivo",
+    "phone": "020 22 308 00",
+    "address": "Soamanandrariny, Antananarivo",
+    "desc": "Clinique médicale Adventiste. Soins holistiques, consultations, hospitalisations.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Sam 7h30-17h · Urgences 24h/24",
+    "emoji": "🏥",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.6,
+    "reviews": 278,
+    "id": 88,
+    "name": "Institut Médical de Madagascar (IMM)",
+    "cat": "Santé",
+    "city": "Antananarivo",
+    "phone": "020 22 217 17",
+    "address": "Anosy, Antananarivo 101",
+    "desc": "Institut Médical privé de haut niveau. Consultations toutes spécialités, analyses biologiques, imagerie médicale IRM, scanner.",
+    "email": "contact@imm.mg",
+    "web": "imm.mg",
+    "hours": "Lun-Sam 7h-17h",
+    "emoji": "🔬",
+    "status": "active",
+    "plan": "basic",
+    "badge": "verified"
+  },
+  {
+    "rating": 4.8,
+    "reviews": 345,
+    "id": 89,
+    "name": "Institut Pasteur de Madagascar",
+    "cat": "Santé",
+    "city": "Antananarivo",
+    "phone": "020 22 401 64",
+    "address": "Ambatofotsikely, Antananarivo 101",
+    "desc": "Institut Pasteur de Madagascar — analyses biologiques de référence, vaccinations, médecine tropicale. Référence nationale en santé publique.",
+    "email": "ipm@pasteur.mg",
+    "web": "pasteur.mg",
+    "hours": "Lun-Ven 7h30-16h",
+    "emoji": "🔬",
+    "status": "active",
+    "plan": "basic",
+    "badge": "verified",
+    "photo": "https://www.pasteur.mg/wp-content/uploads/2019/06/IPM-exterieur.jpg"
+  },
+  {
+    "rating": 4.1,
+    "reviews": 77,
+    "id": 90,
+    "name": "Clinique du Village des Jeux",
+    "cat": "Santé",
+    "city": "Antananarivo",
+    "phone": "020 22 437 62",
+    "address": "Ankorondrano, Antananarivo",
+    "desc": "Clinique chirurgicale du Village des Jeux à Ankorondrano. Chirurgie ambulatoire, consultations.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Sam 7h30-17h",
+    "emoji": "🏥",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 3.7,
+    "reviews": 87,
+    "id": 91,
+    "name": "CHU Mahajanga",
+    "cat": "Santé",
+    "city": "Mahajanga",
+    "phone": "020 62 223 52",
+    "address": "Avenue de France, Mahajanga 401",
+    "desc": "Centre Hospitalier Universitaire de Mahajanga. Principal hôpital de la région Boeny. Urgences, chirurgie, maternité.",
+    "email": "",
+    "web": "",
+    "hours": "24h/24 — 7j/7",
+    "emoji": "🏥",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 3.7,
+    "reviews": 93,
+    "id": 92,
+    "name": "CHU de Toamasina",
+    "cat": "Santé",
+    "city": "Toamasina",
+    "phone": "020 53 323 58",
+    "address": "Boulevard Joffre, Toamasina 501",
+    "desc": "Centre Hospitalier Universitaire de Toamasina. Principal hôpital de la côte Est. Urgences 24h/24, chirurgie, maternité.",
+    "email": "",
+    "web": "",
+    "hours": "24h/24 — 7j/7",
+    "emoji": "🏥",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 3.6,
+    "reviews": 78,
+    "id": 93,
+    "name": "CHU Fianarantsoa",
+    "cat": "Santé",
+    "city": "Fianarantsoa",
+    "phone": "020 75 510 08",
+    "address": "Boulevard Philibert Tsiranana, Fianarantsoa 301",
+    "desc": "Centre Hospitalier Universitaire de Fianarantsoa. Principal établissement de soins du Sud malgache.",
+    "email": "",
+    "web": "",
+    "hours": "24h/24 — 7j/7",
+    "emoji": "🏥",
+    "status": "active",
+    "plan": "basic",
+    "badge": ""
+  },
+  {
+    "rating": 4.3,
+    "reviews": 67,
+    "id": 94,
+    "name": "Espace Médical Mahajanga",
+    "cat": "Santé",
+    "city": "Mahajanga",
+    "phone": "020 62 233 15",
+    "address": "Mahajanga 401",
+    "desc": "Espace Médical de Mahajanga — clinique privée, urgences, consultations spécialisées.",
+    "email": "",
+    "web": "espacemedical.mg",
+    "hours": "24h/24 — 7j/7",
+    "emoji": "🚑",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://espacemedical.mg/wp-content/uploads/2022/01/Espace-Medical-Mahajanga.jpg"
+  },
+  {
+    "rating": 4.3,
+    "reviews": 54,
+    "id": 95,
+    "name": "Espace Médical Diego-Suarez",
+    "cat": "Santé",
+    "city": "Antsiranana",
+    "phone": "020 82 234 82",
+    "address": "Antsiranana (Diego-Suarez) 201",
+    "desc": "Espace Médical Antsiranana — urgences médicales, évacuation sanitaire, consultations.",
+    "email": "",
+    "web": "espacemedical.mg",
+    "hours": "24h/24 — 7j/7",
+    "emoji": "🚑",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://espacemedical.mg/wp-content/uploads/2022/01/Espace-Medical-Diego.jpg"
+  },
+  {
+    "rating": 4.2,
+    "reviews": 234,
+    "id": 96,
+    "name": "BOA — Agence Centrale Antaninarenina",
+    "cat": "Banques",
+    "city": "Antananarivo",
+    "phone": "020 22 392 50",
+    "address": "2, Place Philibert Tsiranana BP 183, Antaninarenina, Antananarivo 101",
+    "desc": "Bank of Africa — agence centrale et siège. 1ère banque de Madagascar avec 80 agences et 123 GAB. Comptes courants, épargne, crédits, cartes Visa Salaria/Sesame, Western Union, MyBOA en ligne.",
+    "email": "boa5000@boa.mg",
+    "web": "boa.mg",
+    "hours": "Lun-Ven 8h-16h · Sam 8h-12h",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "verified",
+    "photo": "https://boamadagascar.com/wp-content/uploads/2025/01/Logo_PP_Positif-small.png",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 4.1,
+    "reviews": 89,
+    "id": 97,
+    "name": "BOA — Agence Alarobia",
+    "cat": "Banques",
+    "city": "Antananarivo",
+    "phone": "020 22 495 97",
+    "address": "Bâtiment ABC, Alarobia, Antananarivo 101",
+    "desc": "Agence BOA Alarobia. Services bancaires complets, DAB disponible, Visa/Mastercard.",
+    "email": "boa5074@boa.mg",
+    "web": "boa.mg",
+    "hours": "Lun-Ven 8h-16h",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://boamadagascar.com/wp-content/uploads/2025/01/Logo_PP_Positif-small.png",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 4.0,
+    "reviews": 67,
+    "id": 98,
+    "name": "BOA — Agence Ambanidia",
+    "cat": "Banques",
+    "city": "Antananarivo",
+    "phone": "020 22 623 82",
+    "address": "Lot V D 33 Ter, Ambanidia, Antananarivo 101",
+    "desc": "Agence BOA Ambanidia. DAB, dépôts, retraits, virements, crédits personnels.",
+    "email": "boa5045@boa.mg",
+    "web": "boa.mg",
+    "hours": "Lun-Ven 8h-16h",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://boamadagascar.com/wp-content/uploads/2025/01/Logo_PP_Positif-small.png",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 4.2,
+    "reviews": 112,
+    "id": 99,
+    "name": "BOA — Agence Ankorondrano",
+    "cat": "Banques",
+    "city": "Antananarivo",
+    "phone": "020 22 334 64",
+    "address": "Centre d'Affaires Madécasse II, Ankorondrano, Antananarivo 101",
+    "desc": "Agence BOA Ankorondrano dans le quartier affaires. Services entreprises et particuliers, DAB.",
+    "email": "boa5605@boa.mg",
+    "web": "boa.mg",
+    "hours": "Lun-Ven 8h-16h",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://boamadagascar.com/wp-content/uploads/2025/01/Logo_PP_Positif-small.png",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 4.0,
+    "reviews": 54,
+    "id": 100,
+    "name": "BOA — Agence Anosizato",
+    "cat": "Banques",
+    "city": "Antananarivo",
+    "phone": "020 22 238 40",
+    "address": "Lot AZ 200 AI, Anosizato Andrefana, Antananarivo 102",
+    "desc": "Agence BOA Anosizato. Banque de proximité, DAB 24h/24.",
+    "email": "boa5032@boa.mg",
+    "web": "boa.mg",
+    "hours": "Lun-Ven 8h-16h",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://boamadagascar.com/wp-content/uploads/2025/01/Logo_PP_Positif-small.png",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 4.0,
+    "reviews": 48,
+    "id": 101,
+    "name": "BOA — Agence Ambohimanarina",
+    "cat": "Banques",
+    "city": "Antananarivo",
+    "phone": "020 23 320 53",
+    "address": "Lot IVH 52 A, Ambodimita Ambohimanarina, Antananarivo 101",
+    "desc": "Agence BOA Ambohimanarina. Services bancaires de proximité, crédits, épargne.",
+    "email": "boa5050@boa.mg",
+    "web": "boa.mg",
+    "hours": "Lun-Ven 8h-16h",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://boamadagascar.com/wp-content/uploads/2025/01/Logo_PP_Positif-small.png",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 4.1,
+    "reviews": 76,
+    "id": 102,
+    "name": "BOA — Agence B Antaninarenina",
+    "cat": "Banques",
+    "city": "Antananarivo",
+    "phone": "020 22 236 29",
+    "address": "Angle Rue Paul Dussac / Jean Jaurès, Antaninarenina, Antananarivo 101",
+    "desc": "BOA Agence B Antaninarenina — deuxième agence dans le centre-ville.",
+    "email": "boa5020@boa.mg",
+    "web": "boa.mg",
+    "hours": "Lun-Ven 8h-16h",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://boamadagascar.com/wp-content/uploads/2025/01/Logo_PP_Positif-small.png",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 4.1,
+    "reviews": 67,
+    "id": 103,
+    "name": "BOA — Antsirabe",
+    "cat": "Banques",
+    "city": "Antsirabe",
+    "phone": "020 44 480 37",
+    "address": "Lot 22 K 30, Rue Jean Ralaimongo, Antsirabe 110",
+    "desc": "Agence BOA Antsirabe. Services complets pour la ville thermale — dépôts, retraits, crédits, DAB.",
+    "email": "boa5800@boa.mg",
+    "web": "boa.mg",
+    "hours": "Lun-Ven 8h-16h",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://boamadagascar.com/wp-content/uploads/2025/01/Logo_PP_Positif-small.png",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 4.0,
+    "reviews": 89,
+    "id": 104,
+    "name": "BOA — Toamasina",
+    "cat": "Banques",
+    "city": "Toamasina",
+    "phone": "020 53 310 21",
+    "address": "Boulevard Joffre, Toamasina 501",
+    "desc": "Bank of Africa Toamasina — agence principale de la ville portuaire. Comptes, crédits, DAB, Western Union.",
+    "email": "",
+    "web": "boa.mg",
+    "hours": "Lun-Ven 8h-16h",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://boamadagascar.com/wp-content/uploads/2025/01/Logo_PP_Positif-small.png",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 4.0,
+    "reviews": 54,
+    "id": 105,
+    "name": "BOA — Mahajanga",
+    "cat": "Banques",
+    "city": "Mahajanga",
+    "phone": "020 62 228 50",
+    "address": "Avenue de la République, Mahajanga 401",
+    "desc": "Bank of Africa Mahajanga. Services bancaires complets pour la région Boeny.",
+    "email": "boa2900@boa.mg",
+    "web": "boa.mg",
+    "hours": "Lun-Ven 8h-16h",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://boamadagascar.com/wp-content/uploads/2025/01/Logo_PP_Positif-small.png",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 4.0,
+    "reviews": 43,
+    "id": 106,
+    "name": "BOA — Antsiranana",
+    "cat": "Banques",
+    "city": "Antsiranana",
+    "phone": "020 82 212 40",
+    "address": "Avenue Rejoyeuse, Antsiranana 201",
+    "desc": "Bank of Africa Diego-Suarez. Services bancaires pour la région Diana, DAB disponible.",
+    "email": "",
+    "web": "boa.mg",
+    "hours": "Lun-Ven 8h-16h",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://boamadagascar.com/wp-content/uploads/2025/01/Logo_PP_Positif-small.png",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 3.9,
+    "reviews": 45,
+    "id": 107,
+    "name": "BOA — Fianarantsoa",
+    "cat": "Banques",
+    "city": "Fianarantsoa",
+    "phone": "020 75 507 10",
+    "address": "Lot 062 E, Ambalakosoa, Fianarantsoa 301",
+    "desc": "Bank of Africa Fianarantsoa. DAB, épargne, crédits pour la région Haute Matsiatra.",
+    "email": "boa2010@boa.mg",
+    "web": "boa.mg",
+    "hours": "Lun-Ven 8h-16h",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://boamadagascar.com/wp-content/uploads/2025/01/Logo_PP_Positif-small.png",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 3.9,
+    "reviews": 28,
+    "id": 108,
+    "name": "BOA — Manjakandriana",
+    "cat": "Banques",
+    "city": "Antananarivo",
+    "phone": "034 91 338 38",
+    "address": "Lot MJV 26, Manjakandriana 116",
+    "desc": "BOA Manjakandriana. Banque de proximité pour les communes rurales autour de Tana.",
+    "email": "boa5602@boa.mg",
+    "web": "boa.mg",
+    "hours": "Lun-Ven 8h-15h30",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://boamadagascar.com/wp-content/uploads/2025/01/Logo_PP_Positif-small.png",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 4.5,
+    "reviews": 289,
+    "id": 109,
+    "name": "BMOI — Siège Antaninarenina",
+    "cat": "Banques",
+    "city": "Antananarivo",
+    "phone": "020 22 346 09",
+    "address": "Place de l'Indépendance, BP 25 bis, Antaninarenina, Antananarivo 101",
+    "desc": "Banque Malgache de l'Océan Indien — siège. Filiale groupe BCP Maroc, première banque privée de Madagascar. Certification ISO 9001:2015. Comptes, cartes Visa BMOI, BMOINET en ligne.",
+    "email": "bmoi@bmoi.mg",
+    "web": "bmoinet.net",
+    "hours": "Lun-Ven 8h-15h30",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "verified",
+    "photo": "https://www.bmoi.mg/wp-content/uploads/2022/09/logo-bmoi-groupe-bcp.png",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 4.6,
+    "reviews": 134,
+    "id": 110,
+    "name": "BMOI — Agence Prestige",
+    "cat": "Banques",
+    "city": "Antananarivo",
+    "phone": "020 22 346 09",
+    "address": "Rue Ratsimilaho, Antaninarenina, Antananarivo 101",
+    "desc": "BMOI Agence Prestige — service premium personnalisé pour clients à hauts revenus. Assistance dédiée, produits Harena et Vikina.",
+    "email": "bmoi@bmoi.mg",
+    "web": "bmoinet.net",
+    "hours": "Lun-Ven 8h-15h30",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "verified",
+    "photo": "https://www.bmoi.mg/wp-content/uploads/2022/09/logo-bmoi-groupe-bcp.png",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 4.3,
+    "reviews": 87,
+    "id": 111,
+    "name": "BMOI — Tsaralalàna",
+    "cat": "Banques",
+    "city": "Antananarivo",
+    "phone": "020 22 346 09",
+    "address": "Rue Ingereza, Tsaralalàna, Antananarivo",
+    "desc": "Agence BMOI Tsaralalàna. Services bancaires pour particuliers et entreprises, BMOINET.",
+    "email": "",
+    "web": "bmoinet.net",
+    "hours": "Lun-Ven 8h-15h30",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://www.bmoi.mg/wp-content/uploads/2022/09/logo-bmoi-groupe-bcp.png",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 4.2,
+    "reviews": 56,
+    "id": 112,
+    "name": "BMOI — Antsirabe",
+    "cat": "Banques",
+    "city": "Antsirabe",
+    "phone": "020 44 487 48",
+    "address": "Avenue Jean Ralaimongo, Antsirabe 110",
+    "desc": "Agence BMOI Antsirabe. Services bancaires complets, ouverte Lun-Dim.",
+    "email": "bmoi@bmoi.mg",
+    "web": "bmoinet.net",
+    "hours": "Lun-Dim 8h-11h30/14h-16h30",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://www.bmoi.mg/wp-content/uploads/2022/09/logo-bmoi-groupe-bcp.png",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 4.2,
+    "reviews": 267,
+    "id": 113,
+    "name": "BNI Madagascar — Siège Analakely",
+    "cat": "Banques",
+    "city": "Antananarivo",
+    "phone": "022 288 80",
+    "address": "Rue Naka Rabemanantsoa, Analakely, Antananarivo 101",
+    "desc": "BNI Madagascar — siège social. Banque nationale. Espace Premium Analakely, comptes épargne, crédits, cartes, BNI Direct en ligne.",
+    "email": "",
+    "web": "bni.mg",
+    "hours": "Lun-Ven 8h-16h · Sam 8h-12h",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "verified",
+    "photo": "https://www.bni.mg/themes/custom/bni/assets/img/bni-main-logo.svg",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 4.0,
+    "reviews": 98,
+    "id": 114,
+    "name": "BNI — Agence Behoririka",
+    "cat": "Banques",
+    "city": "Antananarivo",
+    "phone": "022 288 80",
+    "address": "Behoririka, Antananarivo 101",
+    "desc": "Agence BNI Behoririka. Services bancaires complets, dépôts, retraits, virements.",
+    "email": "",
+    "web": "bni.mg",
+    "hours": "Mar-Sam 8h-16h",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://www.bni.mg/themes/custom/bni/assets/img/bni-main-logo.svg",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 3.9,
+    "reviews": 34,
+    "id": 115,
+    "name": "BNI — Fianarantsoa",
+    "cat": "Banques",
+    "city": "Fianarantsoa",
+    "phone": "020 75 510 10",
+    "address": "Boulevard Philibert Tsiranana, Fianarantsoa 301",
+    "desc": "Agence BNI Fianarantsoa. Services bancaires pour la région Haute Matsiatra.",
+    "email": "",
+    "web": "bni.mg",
+    "hours": "Lun-Ven 8h-16h",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://www.bni.mg/themes/custom/bni/assets/img/bni-main-logo.svg",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 4.1,
+    "reviews": 312,
+    "id": 116,
+    "name": "Société Générale Madagasikara (ex BFV-SG)",
+    "cat": "Banques",
+    "city": "Antananarivo",
+    "phone": "020 22 200 46",
+    "address": "14 Rue Jeneraly Rabehevitra, Antaninarenina, Antananarivo 101",
+    "desc": "Société Générale Madagasikara — 2ème réseau bancaire avec 45 agences dans les 22 régions. Cartes Visa, Western Union, GAB.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Ven 8h-16h · Sam 8h-13h",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "verified",
+    "photo": "https://particuliers.societegenerale.mg/themes/custom/sg_theme/logo.png",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 4.2,
+    "reviews": 145,
+    "id": 117,
+    "name": "MCB Madagascar",
+    "cat": "Banques",
+    "city": "Antananarivo",
+    "phone": "020 22 342 50",
+    "address": "Rue des 77 Parlementaires Français, Antananarivo",
+    "desc": "Mauritius Commercial Bank Madagascar. Banque internationale, services expatriés et entreprises. Cartes Visa/Mastercard, comptes en devises USD/EUR, DAB.",
+    "email": "",
+    "web": "mcbmadagascar.com",
+    "hours": "Lun-Ven 8h-15h30",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "verified",
+    "photo": "https://www.mcbmadagascar.com/sites/default/files/mcb-logo.png",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 4.0,
+    "reviews": 89,
+    "id": 118,
+    "name": "SBM Madagascar",
+    "cat": "Banques",
+    "city": "Antananarivo",
+    "phone": "020 22 288 00",
+    "address": "Immeuble Fiaro, Antananarivo 101",
+    "desc": "State Bank of Mauritius Madagascar. Banque internationale mauricienne, services particuliers et entreprises.",
+    "email": "",
+    "web": "sbmgroup.mu",
+    "hours": "Lun-Ven 8h-15h30",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://www.sbmbank.mg/sites/default/files/SBM-logo.png",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 4.1,
+    "reviews": 156,
+    "id": 119,
+    "name": "Accès Banque Madagascar (ABM)",
+    "cat": "Banques",
+    "city": "Antananarivo",
+    "phone": "020 22 605 00",
+    "address": "Rue Docteur Joseph Raseta, Antananarivo 101",
+    "desc": "Accès Banque Madagascar — banque inclusive en forte expansion. Idéale pour petits commerçants, fonctionnaires, entrepreneurs. Comptes accessibles, microcrédit.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Ven 8h-16h",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://www.acces-banque-madagascar.com/wp-content/uploads/2021/09/logo-abm.png",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 4.1,
+    "reviews": 78,
+    "id": 120,
+    "name": "BGFIBank Madagascar",
+    "cat": "Banques",
+    "city": "Antananarivo",
+    "phone": "020 22 342 09",
+    "address": "Lot CSI 112 et 113, Antananarivo 101",
+    "desc": "BGFIBank Madagascar, filiale du groupe gabonais BGFI. Banque affaires et particuliers premium.",
+    "email": "",
+    "web": "madagascar.bgfi.com",
+    "hours": "Lun-Ven 8h-15h30",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://madagascar.bgfi.com/wp-content/uploads/sites/12/2019/11/bgfi-logo.png",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 4.0,
+    "reviews": 134,
+    "id": 121,
+    "name": "Baobab Banque Madagascar",
+    "cat": "Banques",
+    "city": "Antananarivo",
+    "phone": "020 22 357 00",
+    "address": "Antananarivo 101",
+    "desc": "Baobab Banque Madagascar (ex-MicroCred). Banque d'inclusion financière, microcrédit, épargne populaire. Nombreuses agences partout à Madagascar.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Sam 8h-17h",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://baobab-microfinance.com/wp-content/uploads/2021/03/Logo-Baobab.png",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 3.9,
+    "reviews": 89,
+    "id": 122,
+    "name": "Caisse d'Épargne de Madagascar (CEM)",
+    "cat": "Banques",
+    "city": "Antananarivo",
+    "phone": "020 22 205 50",
+    "address": "Analakely, Antananarivo 101",
+    "desc": "Caisse d'Épargne de Madagascar — épargne pour tous, services accessibles aux ménages à revenus modestes.",
+    "email": "",
+    "web": "",
+    "hours": "Lun-Ven 8h-15h",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "",
+    "photo": "https://www.cem.mg/wp-content/uploads/2021/01/logo-cem.png",
+    "photoStyle": "contain"
+  },
+  {
+    "rating": 4.4,
+    "reviews": 67,
+    "id": 123,
+    "name": "BMOI — Centre d'Affaires EDEN",
+    "cat": "Banques",
+    "city": "Antananarivo",
+    "phone": "020 22 346 09",
+    "address": "Centre commercial EDEN, Antananarivo",
+    "desc": "BMOI Centre d'Affaires EDEN — services premium pour grandes entreprises, Trade Finance international.",
+    "email": "bmoi@bmoi.mg",
+    "web": "bmoinet.net",
+    "hours": "Lun-Ven 8h-16h",
+    "emoji": "🏦",
+    "status": "active",
+    "plan": "basic",
+    "badge": "verified",
+    "photo": "https://www.bmoi.mg/wp-content/uploads/2022/09/logo-bmoi-groupe-bcp.png",
+    "photoStyle": "contain"
+  }
+];
+
+let currentLang = 'fr';
+let selectedPlan = 'basic';
+let currentFilter = '';
+
+const translations = {
+  fr: {heroTitle:'Trouvez tout à<br><em>Madagascar</em>',heroSub:'Restaurants, hôtels, commerces, services... Les meilleures adresses de la Grande Île.',searchPh:'Restaurant, hôtel, pharmacie...'},
+  mg: {heroTitle:'Mahita zavatra rehetra<br><em>Madagasikara</em>',heroSub:'Trano fisakafoana, hotely, fivarotana... Ny toerana tsara indrindra eto Madagasikara.',searchPh:'Trano fisakafoana, hotely, farmasια...'},
+};
+
+// ===== UTILS =====
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  window.scrollTo(0,0);
+  if(id==='listings') { populateFilters(); renderListings(); }
+  if(id==='home') { renderHome(); }
+  if(id==='admin') { renderAdmin(); }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// ===== HOME =====
+function renderHome() {
+  // Stats
+  document.getElementById('stat-total').textContent = businesses.filter(b=>b.status==='active').length;
+
+  // Categories
+  const catGrid = document.getElementById('home-cats');
+  catGrid.innerHTML = CATS.map(c => {
+    const count = businesses.filter(b=>b.cat===c.name && b.status==='active').length;
+    return `<div class="cat-card" onclick="filterAndGo('${c.name}')">
+      <div class="cat-img-wrap" style="background-image:url(${c.img})">
+        <div class="cat-img-overlay"></div>
+        <div class="cat-svg-icon">${CAT_SVG[c.icon]||''}</div>
+      </div>
+      <div class="cat-body">
+        <div class="cat-name">${c.name}</div>
+        <div class="cat-count">${count} adresse${count>1?'s':''}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Update count display
+  const countEl = document.querySelector('#page-home .section-title b');
+  if (countEl) countEl.textContent = businesses.filter(b=>b.status==='active').length;
+}
+
+const PHOTOS = {
+  // Photos réelles et fiables — thème Madagascar
+  // Restaurants : cuisine malgache, marché
+  'Restaurants': 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=500&h=250&fit=crop&q=80',
+  // Hôtels : lodge tropical, bungalow
+  'Hôtels': 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=500&h=250&fit=crop&q=80',
+  // Pharmacies : médicaments, santé
+  'Pharmacies': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500&h=250&fit=crop&q=80',
+  // Supermarchés : marché fruits légumes
+  'Supermarchés': 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&h=250&fit=crop&q=80',
+  // Banques : bâtiment financier
+  'Banques': 'https://images.unsplash.com/photo-1501167786227-4cba60f6d58f?w=500&h=250&fit=crop&q=80',
+  // Taxis : rue animée africaine
+  'Taxis': 'https://images.unsplash.com/photo-1597239450996-ea7c2c564412?w=500&h=250&fit=crop&q=80',
+  // Beauté & Spa : salon, beauté
+  'Beauté & Spa': 'https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=500&h=250&fit=crop&q=80',
+  // Santé : hôpital, soins
+  'Santé': 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=500&h=250&fit=crop&q=80',
+  // Éducation : université, école
+  'Éducation': 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=500&h=250&fit=crop&q=80',
+  // Immobilier : maison tropicale
+  'Immobilier': 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=500&h=250&fit=crop&q=80',
+  // Garage & Auto : garage, voiture
+  'Garage & Auto': 'https://images.unsplash.com/photo-1487754180451-c456f719a1fc?w=500&h=250&fit=crop&q=80',
+  // Autre : vue Antananarivo / Madagascar
+  'Autre': 'https://images.unsplash.com/photo-1590928240229-c505fe88faff?w=500&h=250&fit=crop&q=80',
+};
+
+// Photos par ville pour le hero de la carte détail
+const CITY_PHOTOS = {
+  'Antananarivo': 'https://images.unsplash.com/photo-1590928240229-c505fe88faff?w=800&h=300&fit=crop&q=80',
+  'Toamasina':    'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&h=300&fit=crop&q=80',
+  'Nosy Be':      'https://images.unsplash.com/photo-1566438480900-0609be27a4be?w=800&h=300&fit=crop&q=80',
+  'Mahajanga':    'https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?w=800&h=300&fit=crop&q=80',
+  'Fianarantsoa': 'https://images.unsplash.com/photo-1528702748617-c64d49f918af?w=800&h=300&fit=crop&q=80',
+  'Antsirabe':    'https://images.unsplash.com/photo-1509233725247-49e657c54213?w=800&h=300&fit=crop&q=80',
+  'Antsiranana':  'https://images.unsplash.com/photo-1520454974749-a436db0ccc1e?w=800&h=300&fit=crop&q=80',
+  'Toliara':      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=300&fit=crop&q=80',
+};
+
+function getPhoto(cat) {
+  return PHOTOS[cat] || PHOTOS['Autre'];
+}
+
+function getCityPhoto(city) {
+  return CITY_PHOTOS[city] || CITY_PHOTOS['Antananarivo'];
+}
+
+function cardHTML(b) {
+  const photo = b.photo || getPhoto(b.cat);
+  const fallbackPhoto = getPhoto(b.cat);
+  const badgeHTML = b.badge==='premium' ? '<div class="badge badge-premium">⭐ Premium</div>' :
+                    b.badge==='new' ? '<div class="badge badge-new">Nouveau</div>' :
+                    b.badge==='verified' ? '<div class="badge badge-verified">✓ Vérifié</div>' : '';
+  return `<div class="listing-card" onclick="showDetail(${b.id})">
+    <div class="listing-img" style="background-image:url(${photo});background-size:${b.photoStyle==='contain'?'85% auto':'cover'};background-position:center;background-repeat:no-repeat;background-color:${b.photoStyle==='contain'?'#fff':'transparent'};position:relative;" id="card-img-${b.id}">
+      <img src="${photo}" style="display:none" onerror="(function(el){var p=el.closest('.listing-img');if(p)p.style.backgroundImage='url(${fallbackPhoto})';})(this)"/>
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,.25);border-radius:0"></div>
+      ${badgeHTML}
+    </div>
+    <div class="listing-body">
+      <div class="listing-cat">${b.cat}</div>
+      <div class="listing-name">${b.name}</div>
+      <div class="listing-desc">${b.desc.substring(0,80)}...</div>
+      <div class="listing-meta">
+        <div class="listing-loc">📍 ${b.city}</div>
+        <div class="listing-stars">⭐ ${b.rating} <span style="color:var(--muted)">(${b.reviews})</span></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ===== LISTINGS =====
+function populateFilters() {
+  const catSel = document.getElementById('filter-cat');
+  const citySel = document.getElementById('filter-city');
+  const cats = [...new Set(businesses.map(b=>b.cat))].sort();
+  const cities = [...new Set(businesses.map(b=>b.city))].sort();
+  catSel.innerHTML = '<option value="">Toutes catégories</option>' + cats.map(c=>`<option ${c===currentFilter?'selected':''}>${c}</option>`).join('');
+  citySel.innerHTML = '<option value="">Toutes villes</option>' + cities.map(c=>`<option>${c}</option>`).join('');
+}
+
+function renderListings() {
+  const q = (document.getElementById('filter-search')?.value||'').toLowerCase();
+  const cat = document.getElementById('filter-cat')?.value||'';
+  const city = currentCity || (document.getElementById('filter-city')?.value||'');
+  let results = businesses.filter(b=>b.status==='active');
+  // Premium businesses appear first
+  results.sort((a,b) => (b.plan==='premium'?1:0) - (a.plan==='premium'?1:0));
+  if(q) results = results.filter(b=>b.name.toLowerCase().includes(q)||b.desc.toLowerCase().includes(q)||b.cat.toLowerCase().includes(q));
+  if(cat) results = results.filter(b=>b.cat===cat);
+  if(city) results = results.filter(b=>b.city===city);
+  document.getElementById('results-count').textContent = `${results.length} résultat${results.length>1?'s':''}`;
+  document.getElementById('all-listings').innerHTML = results.length ? results.map(b=>cardHTML(b)).join('') : '<div style="color:var(--muted);padding:40px;text-align:center;grid-column:1/-1">Aucun résultat trouvé.</div>';
+}
+
+function filterAndGo(cat) {
+  currentFilter = cat;
+  showPage('listings');
+  setTimeout(()=>{
+    document.getElementById('filter-cat').value = cat;
+    renderListings();
+  }, 100);
+}
+
+// City filter with pills
+let currentCity = '';
+function setCity(city) {
+  currentCity = city;
+  // Update pills active state
+  document.querySelectorAll('.city-pill').forEach(p => p.classList.remove('active'));
+  const active = city ? document.getElementById('pill-' + city) : document.getElementById('pill-all');
+  if(active) active.classList.add('active');
+  // Update hidden select
+  const sel = document.getElementById('filter-city');
+  if(sel) sel.value = city;
+  renderListings();
+}
+
+function doSearch() {
+  const q = document.getElementById('home-search').value.trim();
+  showPage('listings');
+  setTimeout(()=>{
+    const searchEl = document.getElementById('filter-search');
+    if (searchEl) { searchEl.value = q; renderListings(); }
+    if (q) showToast('🔍 Résultats pour : ' + q);
+  }, 80);
+}
+
+// ===== DETAIL =====
+function showDetail(id) {
+  const b = businesses.find(x=>x.id===id);
+  if(!b) return;
+  const colors = {'Restaurants':'#1a0800,#3d1500','Hôtels':'#001a0d,#003d1a'};
+  const c = '1a1a1a,2d2d2d';
+
+  document.getElementById('detail-hero-content').innerHTML = `
+    <div class="detail-icon" style="background:linear-gradient(135deg,#${c});display:flex;align-items:center;justify-content:center;font-size:0;color:white">${(()=>{const cat=CATS.find(x=>x.name===b.cat);if(!cat||!CAT_SVG[cat.icon])return b.emoji||'🏪';return CAT_SVG[cat.icon].replace('<svg ','<svg width="36" height="36" ');})()}</div>
+    <div class="detail-info">
+      <div class="detail-cat">${b.cat}</div>
+      <div class="detail-name">${b.name}</div>
+      <div class="detail-stars">
+        <span style="color:var(--orange);font-size:1rem">⭐ ${b.rating}</span>
+        <span style="color:var(--muted);font-size:.78rem">(${b.reviews} avis)</span>
+        ${b.plan==='premium'?'<span class="badge badge-premium" style="position:static">⭐ Premium</span>':''}
+        ${b.badge==='verified'?'<span class="badge badge-verified" style="position:static">✓ Vérifié</span>':''}
+      </div>
+      <div class="detail-tags">
+        <div class="detail-tag">📍 ${b.city}</div>
+        ${b.hours?`<div class="detail-tag">🕐 ${b.hours}</div>`:''}
+      </div>
+    </div>`;
+
+  document.getElementById('detail-body').innerHTML = `
+    <div>
+      <div class="detail-section">
+        <h3>À propos</h3>
+        <div class="detail-desc">${b.desc}</div>
+        ${b.plan==='premium' && b.badge==='verified' ? '<span style="display:inline-flex;align-items:center;gap:5px;background:#3B82F620;border:1px solid #3B82F6;color:#3B82F6;font-size:.7rem;padding:3px 10px;border-radius:20px;margin-top:8px;">✓ Établissement vérifié par MadaFind</span>' : ''}
+      </div>
+      ${b.photos && b.photos.length > 0 ? `
+      <div class="detail-section">
+        <h3>📸 Photos</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;">
+          ${b.photos.map((src,i) => `<div onclick="openPhotoViewer('${src}')" style="height:110px;background:url('${src}') center/cover;border-radius:10px;cursor:pointer;border:2px solid var(--border);transition:transform .2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'"></div>`).join('')}
+        </div>
+      </div>` : (b.photo ? `
+      <div class="detail-section">
+        <h3>📸 Photo</h3>
+        <div style="height:160px;background:url('${b.photo}') center/${b.photoStyle==='contain'?'85% auto':'cover'} no-repeat ${b.photoStyle==='contain'?'#fff':'transparent'};border-radius:10px;border:1px solid var(--border);"></div>
+      </div>` : '')}
+      <div class="detail-section">
+        <h3>Informations</h3>
+        <div class="info-row"><div class="info-icon">📍</div><div class="info-label">Adresse</div><div class="info-val">${b.address}</div></div>
+        <div class="info-row"><div class="info-icon">📞</div><div class="info-label">Téléphone</div><div class="info-val"><a href="tel:${b.phone}" style="color:var(--red);text-decoration:none;font-weight:600;">${b.phone}</a></div></div>
+        ${b.hours?`<div class="info-row"><div class="info-icon">🕐</div><div class="info-label">Horaires</div><div class="info-val">${b.hours}</div></div>`:''}
+        ${b.email?`<div class="info-row"><div class="info-icon">📧</div><div class="info-label">Email</div><div class="info-val"><a href="mailto:${b.email}" style="color:var(--red);text-decoration:none;">${b.email}</a></div></div>`:''}
+        ${b.web?`<div class="info-row"><div class="info-icon">🌐</div><div class="info-label">Site web</div><div class="info-val"><a href="${b.web.startsWith('http')?b.web:'https://'+b.web}" target="_blank" style="color:var(--red);text-decoration:none;font-weight:600;">${b.web} ↗</a></div></div>`:''}
+      </div>
+    </div>
+    <div>
+      <div class="detail-section">
+        <h3>Contact</h3>
+        <a class="contact-btn" href="tel:${b.phone}" style="display:block;text-align:center;text-decoration:none;">📞 Appeler maintenant</a>
+        ${b.email?`<a class="contact-btn" href="mailto:${b.email}" style="background:var(--dark2);border:1px solid var(--border);display:block;text-align:center;text-decoration:none;margin-top:4px;">📧 Envoyer un email</a>`:''}
+        <a class="contact-btn" href="https://wa.me/${b.phone ? b.phone.replace(/[^0-9]/g,'').replace(/^0/,'261') : '261320000000'}" target="_blank" style="background:#25D366;display:block;text-align:center;text-decoration:none;margin-top:4px;">💬 WhatsApp</a>
+        ${b.web ? `<a class="contact-btn" href="${b.web.startsWith('http')?b.web:'https://'+b.web}" target="_blank" style="background:#2563eb;display:block;text-align:center;text-decoration:none;margin-top:4px;">🌐 Visiter le site web</a>` : ''}
+      </div>
+      <div class="detail-section">
+        <h3>Partager</h3>
+        <button class="contact-btn" style="background:var(--dark2);border:1px solid var(--border)" onclick="navigator.clipboard.writeText(window.location.origin+'?id=${b.id}').then(()=>showToast('🔗 Lien copié !'))">🔗 Copier le lien</button>
+      </div>
+    </div>
+    <div class="detail-section" style="margin:0 16px 24px;">
+      <h3>📍 Localisation & Itinéraire</h3>
+      <div id="map-layer-switcher" style="display:flex;gap:6px;margin-bottom:8px;"></div>
+      <div id="detail-map"></div>
+      <div id="map-address-bar" style="margin-top:10px;background:var(--dark2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:1.2rem">📍</span>
+        <div style="flex:1">
+          <div id="map-addr-name" style="font-size:.82rem;font-weight:700;color:var(--text)"></div>
+          <div id="map-addr-city" style="font-size:.75rem;color:var(--muted)"></div>
+        </div>
+      </div>
+      <div id="route-panel" style="margin-top:10px;">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+          <input id="user-location-input" placeholder="📌 Votre position (ex: Analakely, Tana)" style="flex:1;background:var(--dark2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:10px;font-family:Sora,sans-serif;font-size:.78rem;outline:none;" oninput="clearRoute()"/>
+          <button onclick="getRouteFromInput()" style="background:#E8412A;color:#fff;border:none;padding:10px 16px;border-radius:10px;font-family:Sora,sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;">🗺️ Trajet</button>
+          <button onclick="useMyGPS()" title="Ma position GPS" style="background:var(--dark2);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:10px;font-size:1rem;cursor:pointer;">📡</button>
+        </div>
+        <div id="route-info" style="display:none;background:var(--dark2);border:1px solid #E8412A33;border-radius:10px;padding:12px 14px;font-size:.78rem;">
+          <div style="display:flex;gap:16px;flex-wrap:wrap;">
+            <div><span style="color:var(--muted)">Distance</span><br><b id="route-dist" style="color:#E8412A;font-size:1rem"></b></div>
+            <div><span style="color:var(--muted)">Durée estimée</span><br><b id="route-time" style="color:var(--text);font-size:1rem"></b></div>
+            <div><span style="color:var(--muted)">Mode</span><br><b id="route-mode" style="color:var(--text);font-size:1rem">🚗 Voiture</b></div>
+          </div>
+          <div id="route-steps" style="margin-top:10px;display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto;"></div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:8px;" id="route-mode-btns">
+          <button onclick="setRouteMode('driving')" id="mode-driving" class="route-mode-btn active-mode">🚗 Voiture</button>
+          <button onclick="setRouteMode('walking')" id="mode-walking" class="route-mode-btn">🚶 Pied</button>
+          <button onclick="setRouteMode('cycling')" id="mode-cycling" class="route-mode-btn">🚲 Vélo</button>
+        </div>
+      </div>
+    </div>`;
+
+  showPage('detail');
+  // City background in hero
+  const heroBg = document.getElementById('detail-hero-bg');
+  if(heroBg) heroBg.style.backgroundImage = `url(${getCityPhoto(b.city)})`;
+  setTimeout(()=>renderMap(b), 200);
+}
+
+
+// ===== MAP & ROUTING =====
+let leafletMap = null;
+let currentMapMode = 'plan';
+
+function switchLayer(mode) {
+  if (!leafletMap) return;
+  currentMapMode = mode;
+  if (mode === 'satellite') {
+    if (window._osmLayer) leafletMap.removeLayer(window._osmLayer);
+    if (window._satLayer) window._satLayer.addTo(leafletMap);
+    if (window._satLabelLayer) window._satLabelLayer.addTo(leafletMap);
+    document.querySelectorAll('.layer-btn').forEach(b => b.classList.remove('active-layer'));
+    const btn = document.getElementById('btn-layer-sat');
+    if (btn) btn.classList.add('active-layer');
+  } else {
+    if (window._satLayer) leafletMap.removeLayer(window._satLayer);
+    if (window._satLabelLayer) leafletMap.removeLayer(window._satLabelLayer);
+    if (window._osmLayer) window._osmLayer.addTo(leafletMap);
+    document.querySelectorAll('.layer-btn').forEach(b => b.classList.remove('active-layer'));
+    const btn = document.getElementById('btn-layer-plan');
+    if (btn) btn.classList.add('active-layer');
+  }
+}
+let routingControl = null;
+let destMarker = null;
+let destCoords = null;
+let currentRouteMode = 'driving';
+
+const CITY_COORDS = {
+  'Antananarivo': [-18.9137, 47.5361],
+  'Toamasina':    [-18.1492, 49.4023],
+  'Antsirabe':    [-19.8686, 47.0289],
+  'Mahajanga':    [-15.7164, 46.3170],
+  'Fianarantsoa': [-21.4527, 47.0855],
+  'Antsiranana':  [-12.3522, 49.3010],
+  'Toliara':      [-23.3568, 43.6755],
+  'Nosy Be':      [-13.3317, 48.2649],
+};
+
+// OSRM profile mapping
+const OSRM_PROFILE = { driving: 'car', walking: 'foot', cycling: 'bike' };
+const MODE_LABEL = { driving: '🚗 Voiture', walking: '🚶 Pied', cycling: '🚲 Vélo' };
+
+function renderMap(b) {
+  const mapEl = document.getElementById('detail-map');
+  if (!mapEl) return;
+
+  // Reset routing state
+  if (leafletMap) { leafletMap.remove(); leafletMap = null; }
+  routingControl = null;
+  destMarker = null;
+  destCoords = null;
+
+  const baseCoords = CITY_COORDS[b.city] || [-18.9137, 47.5361];
+  leafletMap = L.map('detail-map', { zoomControl: true, scrollWheelZoom: false }).setView(baseCoords, 14);
+
+  const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>', maxZoom: 19,
+  });
+  const satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: '© Esri — Satellite', maxZoom: 19,
+  });
+  const satLabelLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+    attribution: '', maxZoom: 19, opacity: 0.8,
+  });
+
+  currentMapMode = 'plan';
+  osmLayer.addTo(leafletMap);
+
+  // Layer switcher buttons (outside map to avoid conflicts)
+  const mapSwitcher = document.getElementById('map-layer-switcher');
+  if (mapSwitcher) {
+    mapSwitcher.innerHTML = '<button id="btn-layer-plan" class="layer-btn active-layer" onclick="switchLayer(\'plan\')">🗺️ Plan</button>' +
+      '<button id="btn-layer-sat" class="layer-btn" onclick="switchLayer(\'satellite\')">🛰️ Satellite</button>';
+  }
+
+  window._osmLayer = osmLayer;
+  window._satLayer = satLayer;
+  window._satLabelLayer = satLabelLayer;
+
+  // Red destination marker
+  const icon = L.divIcon({
+    html: `<div style="width:42px;height:42px;background:#E8412A;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 3px 14px rgba(232,65,42,.6)"><span style="display:block;transform:rotate(45deg);font-size:20px;text-align:center;line-height:36px">${b.emoji||'🏪'}</span></div>`,
+    iconSize: [42, 42], iconAnchor: [21, 42], popupAnchor: [0, -42], className: '',
+  });
+
+  const marker = L.marker(baseCoords, {icon}).addTo(leafletMap);
+  marker.bindPopup(`<div style="font-family:sans-serif;min-width:150px;padding:4px"><b style="font-size:.9rem">${b.name}</b><br><span style="font-size:.76rem;color:#666">${b.address||b.city}, Madagascar</span></div>`).openPopup();
+  destMarker = marker;
+  destCoords = baseCoords;
+
+  // Geocode exact address
+  const query = encodeURIComponent((b.address ? b.address + ', ' : '') + b.city + ', Madagascar');
+  fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1&countrycodes=mg`)
+    .then(r => r.json())
+    .then(data => {
+      if (data && data[0]) {
+        const lat = parseFloat(data[0].lat);
+        const lon = parseFloat(data[0].lon);
+        destCoords = [lat, lon];
+        leafletMap.setView([lat, lon], 16);
+        marker.setLatLng([lat, lon]);
+        marker.openPopup();
+      }
+    }).catch(()=>{});
+
+  // Address bar
+  const addrName = document.getElementById('map-addr-name');
+  const addrCity = document.getElementById('map-addr-city');
+  if (addrName) addrName.textContent = b.name;
+  if (addrCity) addrCity.textContent = (b.address ? b.address + ' — ' : '') + b.city + ', Madagascar';
+}
+
+function setRouteMode(mode) {
+  currentRouteMode = mode;
+  document.querySelectorAll('.route-mode-btn').forEach(btn => btn.classList.remove('active-mode'));
+  const btn = document.getElementById('mode-' + mode);
+  if (btn) btn.classList.add('active-mode');
+  const modeEl = document.getElementById('route-mode');
+  if (modeEl) modeEl.textContent = MODE_LABEL[mode];
+  // Re-calculate if route already shown
+  const input = document.getElementById('user-location-input');
+  if (input && input.value.trim() && document.getElementById('route-info').style.display !== 'none') {
+    getRouteFromInput();
+  }
+}
+
+function clearRoute() {
+  if (routingControl && leafletMap) {
+    leafletMap.removeControl(routingControl);
+    routingControl = null;
+  }
+  document.getElementById('route-info').style.display = 'none';
+}
+
+function useMyGPS() {
+  if (!navigator.geolocation) { showToast('⚠️ GPS non disponible sur cet appareil'); return; }
+  showToast('📡 Récupération de votre position...');
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const coords = [pos.coords.latitude, pos.coords.longitude];
+      document.getElementById('user-location-input').value = 'Ma position GPS';
+      buildRoute(coords);
+    },
+    () => showToast('⚠️ GPS introuvable — activez la localisation')
+  );
+}
+
+function getRouteFromInput() {
+  const input = document.getElementById('user-location-input');
+  const val = input ? input.value.trim() : '';
+  if (!val) { showToast('📌 Entrez votre position de départ'); return; }
+  showToast('🔍 Recherche de votre position...');
+  const q = encodeURIComponent(val + (val.toLowerCase().includes('madagascar') ? '' : ', Madagascar'));
+  fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`)
+    .then(r => r.json())
+    .then(data => {
+      if (data && data[0]) {
+        buildRoute([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
+      } else {
+        showToast('❌ Position introuvable. Essayez un quartier ou une ville.');
+      }
+    }).catch(() => showToast('❌ Erreur réseau'));
+}
+
+function buildRoute(fromCoords) {
+  if (!leafletMap || !destCoords) return;
+
+  // Remove old route
+  if (routingControl) { leafletMap.removeControl(routingControl); routingControl = null; }
+
+  const profile = OSRM_PROFILE[currentRouteMode] || 'car';
+
+  // Blue start marker
+  const startIcon = L.divIcon({
+    html: `<div style="width:32px;height:32px;background:#2563eb;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(37,99,235,.5);display:flex;align-items:center;justify-content:center;font-size:14px">📌</div>`,
+    iconSize: [32, 32], iconAnchor: [16, 16], className: '',
+  });
+
+  routingControl = L.Routing.control({
+    waypoints: [L.latLng(fromCoords), L.latLng(destCoords)],
+    router: L.Routing.osrmv1({
+      serviceUrl: `https://router.project-osrm.org/route/v1`,
+      profile: profile,
+    }),
+    lineOptions: {
+      styles: [
+        { color: '#000', weight: 9, opacity: 0.2 },
+        { color: '#E8412A', weight: 6, opacity: 1 },
+        { color: '#ff7b5e', weight: 2, opacity: 0.8, dashArray: '1 10' },
+      ],
+      addWaypoints: false,
+    },
+    createMarker: (i, wp) => {
+      if (i === 0) return L.marker(wp.latLng, { icon: startIcon });
+      return null; // keep our custom dest marker
+    },
+    routeWhileDragging: false,
+    showAlternatives: false,
+    collapsible: true,
+    show: false, // hide default panel, we use our own
+  }).addTo(leafletMap);
+
+  routingControl.on('routesfound', e => {
+    const route = e.routes[0];
+    const dist = route.summary.totalDistance;
+    const time = route.summary.totalTime;
+
+    const distStr = dist >= 1000 ? (dist/1000).toFixed(1) + ' km' : Math.round(dist) + ' m';
+    const timeStr = time >= 3600
+      ? Math.floor(time/3600) + 'h ' + Math.floor((time%3600)/60) + 'min'
+      : Math.floor(time/60) + ' min';
+
+    document.getElementById('route-dist').textContent = distStr;
+    document.getElementById('route-time').textContent = timeStr;
+    document.getElementById('route-mode').textContent = MODE_LABEL[currentRouteMode];
+    document.getElementById('route-info').style.display = 'block';
+
+    // Step-by-step instructions
+    const stepsEl = document.getElementById('route-steps');
+    const TURN_ICONS = {
+      'SharpRight':'↱', 'Right':'→', 'SlightRight':'↗',
+      'Straight':'↑',
+      'SlightLeft':'↖', 'Left':'←', 'SharpLeft':'↰',
+      'Roundabout':'⟳', 'DestinationReached':'🏁', 'WaypointReached':'📍',
+    };
+    stepsEl.innerHTML = route.instructions.map(step => {
+      const icon = TURN_ICONS[step.type] || '•';
+      const d = step.distance >= 1000 ? (step.distance/1000).toFixed(1)+' km' : Math.round(step.distance)+' m';
+      return `<div class="route-step"><div class="step-icon">${icon}</div><div>${step.text} <span style="color:var(--red);font-weight:600">${d}</span></div></div>`;
+    }).join('');
+
+    // Fit map to route
+    leafletMap.fitBounds(routingControl.getBounds(), { padding: [30, 30] });
+    showToast('✅ Trajet calculé — ' + distStr + ' · ' + timeStr);
+  });
+
+  routingControl.on('routingerror', () => {
+    showToast('⚠️ Impossible de calculer le trajet pour ce mode. Essayez Voiture ou Pied.');
+  });
+}
+
+// ===== REGISTER =====
+function selectPlan(plan) {
+  selectedPlan = plan;
+  updatePhotoLimit();
+  document.getElementById('plan-basic').classList.toggle('selected', plan==='basic');
+  document.getElementById('plan-premium').classList.toggle('selected', plan==='premium');
+}
+
+function submitForm() {
+  const name = document.getElementById('f-name').value.trim();
+  const cat = document.getElementById('f-cat').value;
+  const city = document.getElementById('f-city').value;
+  const phone = document.getElementById('f-phone').value.trim();
+  const address = document.getElementById('f-address').value.trim();
+  const desc = document.getElementById('f-desc').value.trim();
+  if(!name||!cat||!city||!phone||!address||!desc) { showToast('⚠️ Remplissez tous les champs obligatoires'); return; }
+  const newBiz = {
+    id: Date.now(), name, cat, city, phone, address, desc,
+    email: document.getElementById('f-email').value,
+    web: document.getElementById('f-web').value,
+    hours: document.getElementById('f-hours').value,
+    emoji: document.getElementById('f-emoji').value || '🏪',
+    rating: 0, reviews: 0,
+    status: 'pending', plan: selectedPlan,
+    badge: selectedPlan==='premium' ? 'premium' : 'new',
+    photos: uploadedPhotos.slice(),
+    photo: uploadedPhotos.length > 0 ? uploadedPhotos[0] : null,
+  };
+  businesses.push(newBiz);
+  // Send notification email
+  sendInscriptionEmail(newBiz);
+  if(selectedPlan === 'premium') {
+    showPaymentModal(name);
+  } else {
+    showPage('success');
+  }
+}
+
+function sendInscriptionEmail(biz) {
+  const templateParams = {
+    to_email:    'nomubera1@gmail.com',
+    biz_name:    biz.name,
+    biz_cat:     biz.cat,
+    biz_city:    biz.city,
+    biz_phone:   biz.phone,
+    biz_address: biz.address,
+    biz_plan:    biz.plan === 'premium' ? 'PREMIUM (50 000 Ar/mois)' : 'Gratuit',
+    biz_email:   biz.email || 'Non renseigné',
+    biz_web:     biz.web || 'Non renseigné',
+    inscrit_le:  new Date().toLocaleString('fr-FR', {timeZone:'Indian/Antananarivo'}),
+  };
+  emailjs.send('service_madafind', 'template_inscription', templateParams)
+    .then(() => console.log('Email envoyé !'))
+    .catch(err => console.warn('Email non envoyé:', err));
+}
+
+// ===== PAYMENT MODAL =====
+var qrDone = false;
+var payTimer = null;
+var MVOLA_NUM = '034 92 005 76';
+
+function showPaymentModal(bizName) {
+  document.getElementById('pay-biz-name').textContent = bizName || 'votre commerce';
+  document.getElementById('pay-modal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  setPayStep(1);
+  if(!qrDone) {
+    try {
+      new QRCode(document.getElementById('pay-qr'), {
+        text: 'mvola://pay?to=0349200576&amount=50000&name=MadaFind',
+        width: 160, height: 160,
+        colorDark: '#000000', colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H
+      });
+      qrDone = true;
+    } catch(e) { console.log('QR error:', e); }
+  }
+}
+
+function closePayModal() {
+  document.getElementById('pay-modal').style.display = 'none';
+  document.body.style.overflow = '';
+  if(payTimer) clearInterval(payTimer);
+}
+
+function setPayStep(n) {
+  [1,2,3].forEach(function(i) {
+    var el = document.getElementById('pay-s'+i);
+    if(el) el.style.display = (i===n) ? 'block' : 'none';
+    var dot = document.getElementById('pay-dot'+i);
+    if(dot) {
+      dot.style.background = i < n ? '#00C853' : i === n ? '#E8412A' : '#2A2A2A';
+      dot.style.color = i <= n ? 'white' : '#888';
+    }
+  });
+}
+
+function payGoStep2() {
+  setPayStep(2);
+  var pct = 100;
+  var fill = document.getElementById('pay-timer');
+  if(fill) fill.style.width = '100%';
+  payTimer = setInterval(function() {
+    pct -= 100/(300*10);
+    if(fill) fill.style.width = Math.max(0,pct)+'%';
+    if(pct <= 0) clearInterval(payTimer);
+  }, 100);
+}
+
+function payVerify() {
+  var code = document.getElementById('pay-code').value.trim().toUpperCase();
+  if(!code || code.length < 4) { showToast('Entrez votre code MVola'); return; }
+  if(!code.startsWith('TXN')) { showToast('Le code doit commencer par TXN'); return; }
+  var btn = document.getElementById('pay-verify-btn');
+  btn.textContent = 'Verification...';
+  btn.disabled = true;
+  setTimeout(function() {
+    if(payTimer) clearInterval(payTimer);
+    var now = new Date();
+    document.getElementById('pay-txn-code').textContent = code;
+    document.getElementById('pay-txn-date').textContent = now.toLocaleDateString('fr-FR')+' '+now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    if(businesses.length > 0) {
+      var last = businesses[businesses.length-1];
+      last.status = 'pending_payment';
+      last.txnCode = code;
+      last.txnDate = now.toISOString();
+    }
+    setPayStep(3);
+    btn.textContent = 'Valider';
+    btn.disabled = false;
+  }, 2000);
+}
+
+// ===== ADMIN =====
+function adminLogin() {
+  const pwd = document.getElementById('admin-pwd').value;
+  if(pwd === 'madafind2026') { showPage('admin'); }
+  else { showToast('❌ Mot de passe incorrect'); }
+}
+
+function renderAdmin() {
+  const active = businesses.filter(b=>b.status==='active').length;
+  const pending = businesses.filter(b=>b.status==='pending').length;
+  const revenue = businesses.filter(b=>b.status==='active'&&b.plan==='premium').length * 50000;
+  document.getElementById('adm-total').textContent = businesses.length;
+  document.getElementById('adm-active').textContent = active;
+  document.getElementById('adm-pending').textContent = pending;
+  document.getElementById('adm-revenue').textContent = revenue.toLocaleString();
+
+  document.getElementById('admin-rows').innerHTML = businesses.map(b=>`
+    <div class="table-row">
+      <span style="font-weight:600">${b.emoji} ${b.name}</span>
+      <span style="color:var(--muted)">${b.cat}</span>
+      <span style="color:var(--muted)">${b.city}</span>
+      <span>
+        ${b.status==='active'?'<span class="status-badge status-active">✅ Actif</span>':
+          b.status==='pending_payment'?`<span class="status-badge" style="background:rgba(255,152,0,.15);color:#FF9800">💳 TXN: ${b.txnCode||'?'}</span>`:
+          b.status==='pending'?'<span class="status-badge status-pending">⏳ En attente</span>':
+          '<span class="status-badge">Expiré</span>'}
+      </span>
+      <span>
+        ${b.status==='pending'||b.status==='pending_payment'?`<span class="action-link" onclick="approveB(${b.id})">✅ Approuver</span> `:''}
+        <span class="action-link" style="color:var(--muted)" onclick="deleteB(${b.id})">🗑️</span>
+      </span>
+    </div>`).join('');
+}
+
+function approveB(id) {
+  const b = businesses.find(x=>x.id===id);
+  if(b) { b.status='active'; renderAdmin(); showToast('✅ Fiche approuvée !'); }
+}
+
+function deleteB(id) {
+  businesses = businesses.filter(x=>x.id!==id);
+  renderAdmin(); showToast('🗑️ Fiche supprimée');
+}
+
+// ===== LANG =====
+function toggleLang() {
+  currentLang = currentLang==='fr' ? 'mg' : 'fr';
+  document.getElementById('lang-btn').textContent = currentLang==='fr' ? '🇲🇬 MG' : '🇫🇷 FR';
+  const t = translations[currentLang];
+  document.getElementById('hero-title').innerHTML = t.heroTitle;
+  document.getElementById('hero-sub').textContent = t.heroSub;
+  document.getElementById('home-search').placeholder = t.searchPh;
+}
+
+// INIT
+document.addEventListener('DOMContentLoaded', function() {
+  renderHome();
+  
+  // Payment modal close on overlay click
+  const modal = document.getElementById('payment-modal');
+  if(modal) {
+    modal.addEventListener('click', function(e) {
+      if(e.target === this) closePayment();
+    });
+  }
+});
+
+// Payment handled by showPaymentModal
+
+
+// ===== PHOTO UPLOAD CLOUDINARY =====
+var uploadedPhotos = [];
+var MAX_PHOTOS = 1;
+var CLOUD_NAME = 'dyzqzqzxw';
+var CLOUD_PRESET = 'madafind_upload';
+
+function updatePhotoLimit() {
+  MAX_PHOTOS = selectedPlan === 'premium' ? 5 : 1;
+  var txt = document.getElementById('photo-limit-txt');
+  if(txt) txt.textContent = selectedPlan === 'premium' ? '⭐ Plan Premium : 5 photos maximum' : 'Plan Gratuit : 1 photo maximum';
+  var area = document.getElementById('photo-upload-area');
+  if(area) area.style.borderColor = selectedPlan === 'premium' ? '#F5A623' : '#2a2a2a';
+}
+
+function handlePhotos(input) {
+  var files = Array.from(input.files);
+  if(files.length + uploadedPhotos.length > MAX_PHOTOS) {
+    showToast('⚠️ Maximum ' + MAX_PHOTOS + ' photo(s) pour ce plan');
+    input.value = '';
+    return;
+  }
+  Array.from(files).forEach(function(file) {
+    if(uploadedPhotos.length >= MAX_PHOTOS) return;
+    uploadToCloudinary(file);
+  });
+  input.value = '';
+}
+
+function uploadToCloudinary(file) {
+  var preview = document.getElementById('photo-preview');
+  var loadId = 'load' + Date.now();
+  var loadDiv = document.createElement('div');
+  loadDiv.id = loadId;
+  loadDiv.style.cssText = 'width:80px;height:80px;border-radius:10px;background:#1a1a1a;border:2px dashed #333;display:flex;align-items:center;justify-content:center;font-size:1.5rem;';
+  loadDiv.textContent = '⏳';
+  preview.appendChild(loadDiv);
+
+  var formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUD_PRESET);
+
+  fetch('https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', {
+    method: 'POST',
+    body: formData
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var old = document.getElementById(loadId);
+    if(old) old.remove();
+    if(data.secure_url) {
+      uploadedPhotos.push(data.secure_url);
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'position:relative;width:80px;height:80px;display:inline-block;';
+      var img = document.createElement('img');
+      img.src = data.secure_url;
+      img.style.cssText = 'width:80px;height:80px;border-radius:10px;object-fit:cover;display:block;';
+      var delbtn = document.createElement('button');
+      delbtn.textContent = 'x';
+      delbtn.style.cssText = 'position:absolute;top:-6px;right:-6px;background:#E8412A;border:none;color:white;width:20px;height:20px;border-radius:50%;cursor:pointer;font-size:.7rem;';
+      var savedUrl = data.secure_url;
+      delbtn.onclick = function() { removePhoto(delbtn, savedUrl); };
+      wrap.appendChild(img);
+      wrap.appendChild(delbtn);
+      preview.appendChild(wrap);
+      showToast('Photo ajoutee !');
+    } else {
+      showToast('Erreur upload - reessayez');
+    }
+  })
+  .catch(function() {
+    var old = document.getElementById(loadId);
+    if(old) old.remove();
+    showToast('Erreur connexion');
+  });
+}
+
+
+function removePhoto(btn, url) {
+  uploadedPhotos = uploadedPhotos.filter(function(u) { return u !== url; });
+  btn.parentElement.remove();
+  showToast('🗑️ Photo supprimée');
+}
+
+
+function renderPhotoPreviews() {
+  var preview = document.getElementById('photo-preview');
+  if(!preview) return;
+  preview.innerHTML = uploadedPhotos.map(function(src, i) {
+    return '<div style="position:relative;width:80px;height:80px;">' +
+      '<img src="' + src + '" style="width:80px;height:80px;object-fit:cover;border-radius:10px;border:2px solid #2a2a2a;">' +
+      '<button onclick="removePhoto(' + i + ')" style="position:absolute;top:-6px;right:-6px;background:#E8412A;border:none;color:white;width:20px;height:20px;border-radius:50%;cursor:pointer;font-size:.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;">✕</button>' +
+      '</div>';
+  }).join('');
+  // Update limit text
+  var txt = document.getElementById('photo-limit-txt');
+  if(txt) txt.textContent = uploadedPhotos.length + '/' + MAX_PHOTOS + ' photo(s) — ' + (selectedPlan === 'premium' ? '⭐ Premium' : 'Gratuit');
+}
+
+function removePhoto(i) {
+  uploadedPhotos.splice(i, 1);
+  renderPhotoPreviews();
+}
+
+
+// ===== HERO BACKGROUND SLIDESHOW =====
+const MADA_PHOTOS = [
+  // ✅ Allée des Baobabs Morondava — Unsplash confirmé Madagascar
+  {url:"https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=1400&h=700&fit=crop&q=85",caption:"🌳 Allée des Baobabs — Morondava, Madagascar"},
+  // ✅ Antananarivo — Unsplash confirmé Madagascar
+  {url:"https://images.unsplash.com/photo-1590928240229-c505fe88faff?w=1400&h=700&fit=crop&q=85",caption:"🏙️ Antananarivo — Capitale de Madagascar"},
+  // ✅ Nosy Be — Unsplash confirmé Madagascar
+  {url:"https://images.unsplash.com/photo-1566438480900-0609be27a4be?w=1400&h=700&fit=crop&q=85",caption:"🏖️ Nosy Be — Île des parfums"},
+  // ✅ Hautes Terres rizières — Unsplash confirmé Madagascar
+  {url:"https://images.unsplash.com/photo-1528702748617-c64d49f918af?w=1400&h=700&fit=crop&q=85",caption:"🌾 Hautes Terres — Rizières en terrasses"},
+  // ✅ Tsingy Bemaraha — Wikimedia Commons géolocalisé Madagascar
+  {url:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Tsingy_de_Bemaraha.jpg/1280px-Tsingy_de_Bemaraha.jpg",caption:"🗿 Tsingy de Bemaraha — Patrimoine UNESCO"},
+  // ✅ Lémuriens à queue annelée — Wikimedia Commons Madagascar
+  {url:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Lemur_catta_-Berenty_Private_Reserve%2C_Madagascar-8.jpg/1280px-Lemur_catta_-Berenty_Private_Reserve%2C_Madagascar-8.jpg",caption:"🐒 Lémuriens — Endémiques de Madagascar"},
+  // ✅ Avenue des Baobabs coucher soleil — Wikimedia Commons Madagascar
+  {url:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Baobabs_near_Morondava%2C_Madagascar.jpg/1280px-Baobabs_near_Morondava%2C_Madagascar.jpg",caption:"🌅 Baobabs au coucher du soleil — Morondava"},
+  // ✅ Nosy Iranja plage turquoise — Wikimedia Commons Madagascar
+  {url:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Nosy_Iranja%2C_Madagascar.jpg/1280px-Nosy_Iranja%2C_Madagascar.jpg",caption:"🏝️ Nosy Iranja — Plage turquoise"},
+  // ✅ Caméléon Furcifer — endémique Madagascar Wikimedia
+  {url:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Furcifer_pardalis_-_Panther_chameleon.jpg/1280px-Furcifer_pardalis_-_Panther_chameleon.jpg",caption:"🦎 Caméléon panthère — Endémique de Madagascar"},
+  // ✅ Rova d'Antananarivo — Palais de la Reine
+  {url:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Rova_Antananarivo.jpg/1280px-Rova_Antananarivo.jpg",caption:"🏯 Rova — Palais de la Reine, Antananarivo"},
+  // ✅ Parc Isalo — canyon Madagascar
+  {url:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Isalo_National_Park.jpg/1280px-Isalo_National_Park.jpg",caption:"🏜️ Parc National de l'Isalo — Canyon malgache"},
+  // ✅ Nosy Be coucher de soleil
+  {url:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Sunset_Nosy_Be_Madagascar.jpg/1280px-Sunset_Nosy_Be_Madagascar.jpg",caption:"🌺 Nosy Be — Coucher de soleil sur l'océan Indien"}
+];
+
+let heroBgIndex = 0;
+let heroBgTimer = null;
+
+function initHeroSlideshow() {
+  const heroEl = document.getElementById('hero-bg');
+  if (!heroEl) return;
+
+  // Preload first image
+  function applyPhoto(idx, animate) {
+    const p = MADA_PHOTOS[idx % MADA_PHOTOS.length];
+    if (animate) {
+      heroEl.style.opacity = '0';
+      setTimeout(() => {
+        heroEl.style.backgroundImage = `url(${p.url})`;
+        heroEl.style.opacity = '1';
+        updateCaption(p.caption);
+      }, 500);
+    } else {
+      heroEl.style.backgroundImage = `url(${p.url})`;
+      heroEl.style.opacity = '1';
+      updateCaption(p.caption);
+    }
+  }
+
+  function updateCaption(text) {
+    const cap = document.getElementById('hero-caption');
+    if (cap) { cap.style.opacity='0'; setTimeout(()=>{cap.textContent=text;cap.style.opacity='1';},400); }
+  }
+
+  heroEl.style.transition = 'opacity 0.5s ease';
+  applyPhoto(0, false);
+
+  heroBgTimer = setInterval(() => {
+    heroBgIndex = (heroBgIndex + 1) % MADA_PHOTOS.length;
+    applyPhoto(heroBgIndex, true);
+    document.querySelectorAll('.hero-dot').forEach((d,j)=>d.classList.toggle('dot-active', j===heroBgIndex));
+  }, 60000);
+
+  // Dot indicators click
+  document.querySelectorAll('.hero-dot').forEach((dot, i) => {
+    dot.addEventListener('click', () => {
+      heroBgIndex = i;
+      applyPhoto(i, true);
+      clearInterval(heroBgTimer);
+      heroBgTimer = setInterval(() => {
+        heroBgIndex = (heroBgIndex + 1) % MADA_PHOTOS.length;
+        applyPhoto(heroBgIndex, true);
+      }, 60000);
+      document.querySelectorAll('.hero-dot').forEach((d,j)=>d.classList.toggle('dot-active', j===i));
+    });
+  });
+}
+
+// Init on load
+document.addEventListener('DOMContentLoaded', initHeroSlideshow);
+
+
+function openPhotoViewer(src) {
+  const v = document.getElementById('photo-viewer');
+  document.getElementById('photo-viewer-img').src = src;
+  v.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closePhotoViewer() {
+  document.getElementById('photo-viewer').style.display = 'none';
+  document.body.style.overflow = '';
+}
+</script>
+
+<!-- ===== PHOTO VIEWER MODAL ===== -->
+<div id="photo-viewer" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;align-items:center;justify-content:center;flex-direction:column;" onclick="closePhotoViewer()">
+  <img id="photo-viewer-img" src="" style="max-width:95vw;max-height:85vh;border-radius:12px;object-fit:contain;">
+  <button onclick="closePhotoViewer()" style="margin-top:16px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:8px 20px;border-radius:20px;cursor:pointer;font-size:.8rem;">✕ Fermer</button>
+</div>
+
+<!-- ===== PAYMENT MODAL ===== -->
+<div class="modal-overlay" id="payment-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closePayment()">✕</button>
+
+    <!-- Step indicators -->
+    <div class="step-indicator">
+      <div class="step-dot active" id="dot-1"></div>
+      <div class="step-dot" id="dot-2"></div>
+      <div class="step-dot" id="dot-3"></div>
+    </div>
+
+    <!-- STEP 1 : QR Code -->
+    <div class="modal-step active" id="pay-step-1">
+      <div class="mvola-logo">💚</div>
+      <div class="mvola-title">Paiement MVola</div>
+      <div class="mvola-sub">Scannez le QR code avec votre application MVola</div>
+      <div class="qr-wrap"><div id="mvola-qr"></div></div>
+      <div class="scanning-txt">📱 Ouvrez MVola → Payer → Scanner</div>
+      <div class="mvola-amount" id="pay-amount">50 000 Ar</div>
+      <div class="mvola-num" id="pay-num">📱 034 XX XXX XX</div>
+      <div class="mvola-ref" id="pay-ref">Référence : MADAFIND-PREMIUM</div>
+      <div class="mvola-steps">
+        <div class="mvola-step-item"><div class="step-num">1</div><div>Ouvrez l'application <strong>MVola</strong> sur votre téléphone</div></div>
+        <div class="mvola-step-item"><div class="step-num">2</div><div>Appuyez sur <strong>"Payer"</strong> puis <strong>"Scanner QR"</strong></div></div>
+        <div class="mvola-step-item"><div class="step-num">3</div><div>Pointez sur le QR code et confirmez le paiement de <strong id="step-amount">50 000 Ar</strong></div></div>
+        <div class="mvola-step-item"><div class="step-num">4</div><div>Cliquez <strong>"J'ai payé"</strong> après confirmation MVola</div></div>
+      </div>
+      <button class="btn-green" onclick="goStep2()">✅ J'ai payé — Confirmer</button>
+    </div>
+
+    <!-- STEP 2 : Code confirmation -->
+    <div class="modal-step" id="pay-step-2">
+      <div class="mvola-logo">📲</div>
+      <div class="mvola-title">Confirmer le paiement</div>
+      <div class="mvola-sub">Entrez le code de transaction reçu par SMS de MVola</div>
+      <div class="timer-bar"><div class="timer-fill" id="timer-fill" style="width:100%"></div></div>
+      <input class="confirm-input" id="txn-code" placeholder="Ex: TXN123456789" maxlength="15" oninput="this.value=this.value.toUpperCase()">
+      <div style="color:var(--muted);font-size:.72rem;margin-bottom:20px">Le code commence par <strong style="color:var(--text)">TXN</strong> — vérifiez votre SMS MVola</div>
+      <button class="btn-green" onclick="verifyPayment()">✅ Valider le paiement</button>
+      <div style="margin-top:12px">
+        <span style="color:var(--muted);font-size:.75rem;cursor:pointer" onclick="goStep1()">← Retour au QR code</span>
+      </div>
+    </div>
+
+    <!-- STEP 3 : Succès -->
+    <div class="modal-step" id="pay-step-3">
+      <div class="success-anim">🎉</div>
+      <div class="mvola-title">Paiement confirmé !</div>
+      <div class="mvola-sub">Votre inscription Premium est activée</div>
+      <div class="txn-box">
+        <div class="txn-row"><div class="txn-label">Commerce</div><div class="txn-val" id="txn-name">—</div></div>
+        <div class="txn-row"><div class="txn-label">Plan</div><div class="txn-val">⭐ Premium</div></div>
+        <div class="txn-row"><div class="txn-label">Montant</div><div class="txn-val" id="txn-amount">50 000 Ar</div></div>
+        <div class="txn-row"><div class="txn-label">N° Transaction</div><div class="txn-val txn-id" id="txn-display">—</div></div>
+        <div class="txn-row"><div class="txn-label">Date</div><div class="txn-val" id="txn-date">—</div></div>
+        <div class="txn-row"><div class="txn-label">Statut</div><div class="txn-val" style="color:#00C853">✅ Confirmé</div></div>
+      </div>
+      <div style="color:var(--muted);font-size:.78rem;margin-bottom:20px">Votre fiche sera validée par notre équipe sous <strong style="color:var(--text)">24h</strong>. Vous recevrez une confirmation par SMS.</div>
+      <button class="btn-green" onclick="closePayment();showPage('success')">Terminer →</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- PAYMENT MODAL -->
+<div id="pay-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(8px);z-index:9999;align-items:center;justify-content:center;padding:16px;flex-direction:column;">
+  <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:24px;padding:32px;max-width:400px;width:100%;position:relative;max-height:90vh;overflow-y:auto;">
+    <button onclick="closePayModal()" style="position:absolute;top:14px;right:14px;background:#2a2a2a;border:none;color:#888;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:.9rem;line-height:1;">✕</button>
+    <div style="display:flex;justify-content:center;align-items:center;gap:0;margin-bottom:24px;">
+      <div id="pay-dot1" style="width:28px;height:28px;border-radius:50%;background:#E8412A;color:white;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;">1</div>
+      <div style="width:36px;height:2px;background:#2a2a2a;"></div>
+      <div id="pay-dot2" style="width:28px;height:28px;border-radius:50%;background:#2a2a2a;color:#888;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;">2</div>
+      <div style="width:36px;height:2px;background:#2a2a2a;"></div>
+      <div id="pay-dot3" style="width:28px;height:28px;border-radius:50%;background:#2a2a2a;color:#888;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;">✓</div>
+    </div>
+    <!-- STEP 1 -->
+    <div id="pay-s1" style="text-align:center;">
+      <div style="font-size:2.5rem;margin-bottom:10px;">💚</div>
+      <div style="font-size:1.1rem;font-weight:800;margin-bottom:4px;">Paiement MVola</div>
+      <div style="color:#888;font-size:.78rem;margin-bottom:20px;">Scannez le QR code avec MVola</div>
+      <div style="background:white;padding:14px;border-radius:14px;display:inline-block;margin-bottom:16px;"><div id="pay-qr"></div></div>
+      <div style="background:rgba(0,200,83,.08);border:1px solid rgba(0,200,83,.25);border-radius:12px;padding:14px;margin-bottom:14px;">
+        <div style="font-size:1.8rem;font-weight:800;color:#00C853;">50 000 Ar</div>
+        <div style="font-size:.7rem;color:#888;margin-top:2px;">Plan Premium MadaFind</div>
+      </div>
+      <div style="background:#141414;border:1px solid #333;border-radius:10px;padding:10px;margin-bottom:6px;font-size:1rem;font-weight:700;">📱 034 92 005 76</div>
+      <div style="font-size:.7rem;color:#555;margin-bottom:18px;">Bénéficiaire : <strong style="color:#F2F0EB">MadaFind</strong> · Commerce : <span id="pay-biz-name">—</span></div>
+      <div style="background:#161616;border:1px solid #222;border-radius:10px;padding:14px;margin-bottom:18px;text-align:left;">
+        <div style="display:flex;gap:8px;padding:6px 0;font-size:.75rem;color:#ccc;border-bottom:1px solid #1e1e1e;"><div style="width:20px;height:20px;min-width:20px;border-radius:50%;background:#E8412A;color:white;font-size:.62rem;font-weight:700;display:flex;align-items:center;justify-content:center;">1</div><div>Ouvrez <strong>MVola</strong> sur votre téléphone</div></div>
+        <div style="display:flex;gap:8px;padding:6px 0;font-size:.75rem;color:#ccc;border-bottom:1px solid #1e1e1e;"><div style="width:20px;height:20px;min-width:20px;border-radius:50%;background:#E8412A;color:white;font-size:.62rem;font-weight:700;display:flex;align-items:center;justify-content:center;">2</div><div>Appuyez <strong>"Payer"</strong> → <strong>"Scanner QR"</strong></div></div>
+        <div style="display:flex;gap:8px;padding:6px 0;font-size:.75rem;color:#ccc;border-bottom:1px solid #1e1e1e;"><div style="width:20px;height:20px;min-width:20px;border-radius:50%;background:#E8412A;color:white;font-size:.62rem;font-weight:700;display:flex;align-items:center;justify-content:center;">3</div><div>Confirmez le paiement de <strong>50 000 Ar</strong></div></div>
+        <div style="display:flex;gap:8px;padding:6px 0;font-size:.75rem;color:#ccc;"><div style="width:20px;height:20px;min-width:20px;border-radius:50%;background:#E8412A;color:white;font-size:.62rem;font-weight:700;display:flex;align-items:center;justify-content:center;">4</div><div>Cliquez le bouton ci-dessous</div></div>
+      </div>
+      <button onclick="payGoStep2()" style="width:100%;background:#00C853;color:#000;border:none;padding:13px;border-radius:10px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:Sora,sans-serif;">✅ J'ai payé — Continuer</button>
+    </div>
+    <!-- STEP 2 -->
+    <div id="pay-s2" style="display:none;text-align:center;">
+      <div style="font-size:2.5rem;margin-bottom:10px;">📲</div>
+      <div style="font-size:1.1rem;font-weight:800;margin-bottom:4px;">Code de transaction</div>
+      <div style="color:#888;font-size:.78rem;margin-bottom:16px;">Entrez le code reçu par SMS MVola</div>
+      <div style="height:4px;background:#1a1a1a;border-radius:2px;margin-bottom:20px;overflow:hidden;"><div id="pay-timer" style="height:100%;background:#00C853;width:100%;transition:width .1s;"></div></div>
+      <input id="pay-code" placeholder="TXN123456789" maxlength="15" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" style="width:100%;background:#141414;border:2px solid #2a2a2a;color:#F2F0EB;padding:14px;border-radius:10px;font-family:Sora,sans-serif;font-size:1rem;font-weight:700;outline:none;text-align:center;letter-spacing:2px;margin-bottom:10px;transition:border-color .2s;" onfocus="this.style.borderColor='#00C853'" onblur="this.style.borderColor='#2a2a2a'">
+      <div style="font-size:.7rem;color:#555;margin-bottom:18px;">Code commençant par <strong style="color:#F2F0EB">TXN</strong> dans votre SMS MVola</div>
+      <button id="pay-verify-btn" onclick="payVerify()" style="width:100%;background:#00C853;color:#000;border:none;padding:13px;border-radius:10px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:Sora,sans-serif;margin-bottom:10px;">✅ Valider le paiement</button>
+      <button onclick="setPayStep(1)" style="background:none;border:none;color:#888;font-size:.75rem;cursor:pointer;font-family:Sora,sans-serif;">← Retour au QR code</button>
+    </div>
+    <!-- STEP 3 -->
+    <div id="pay-s3" style="display:none;text-align:center;">
+      <div style="font-size:4rem;margin-bottom:14px;animation:bounceIn .6s ease;">🎉</div>
+      <div style="font-size:1.2rem;font-weight:800;margin-bottom:6px;">Paiement confirmé !</div>
+      <div style="color:#888;font-size:.78rem;margin-bottom:20px;">Votre inscription Premium est activée</div>
+      <div style="background:#141414;border:1px solid #2a2a2a;border-radius:12px;overflow:hidden;margin-bottom:18px;text-align:left;">
+        <div style="display:flex;justify-content:space-between;padding:11px 14px;border-bottom:1px solid #1e1e1e;font-size:.78rem;"><span style="color:#888;">Plan</span><span style="font-weight:600;">⭐ Premium</span></div>
+        <div style="display:flex;justify-content:space-between;padding:11px 14px;border-bottom:1px solid #1e1e1e;font-size:.78rem;"><span style="color:#888;">Montant</span><span style="font-weight:600;color:#00C853;">50 000 Ar</span></div>
+        <div style="display:flex;justify-content:space-between;padding:11px 14px;border-bottom:1px solid #1e1e1e;font-size:.78rem;"><span style="color:#888;">Transaction</span><span style="font-weight:600;color:#00C853;font-family:monospace;" id="pay-txn-code">—</span></div>
+        <div style="display:flex;justify-content:space-between;padding:11px 14px;font-size:.78rem;"><span style="color:#888;">Date</span><span style="font-weight:600;" id="pay-txn-date">—</span></div>
+      </div>
+      <div style="color:#888;font-size:.75rem;line-height:1.6;margin-bottom:20px;">Fiche validée sous <strong style="color:#F2F0EB">24h</strong>. Confirmation par SMS.</div>
+      <div style="background:rgba(255,193,7,.08);border:1px solid rgba(255,193,7,.3);border-radius:12px;padding:14px;margin-bottom:16px;text-align:left;">
+      <div style="font-size:.85rem;font-weight:700;color:#FFC107;margin-bottom:6px;">⏳ En attente de validation</div>
+      <div style="font-size:.75rem;color:#aaa;line-height:1.6;">Votre paiement a été enregistré. Notre équipe va vérifier votre transaction MVola et activer votre fiche sous <strong style="color:#F2F0EB">24h</strong>. Vous recevrez un SMS de confirmation.</div>
+    </div>
+    <button onclick="closePayModal();showPage('success');" style="width:100%;background:#00C853;color:#000;border:none;padding:13px;border-radius:10px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:Sora,sans-serif;">Terminer →</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
